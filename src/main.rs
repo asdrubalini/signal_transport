@@ -1,5 +1,6 @@
-pub mod app;
-pub mod generators;
+mod app;
+mod generators;
+mod samples;
 
 use app::SignalApp;
 use eframe::NativeOptions;
