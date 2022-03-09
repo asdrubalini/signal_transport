@@ -7,24 +7,24 @@ use egui::{
 };
 use parking_lot::RwLock;
 
-use crate::generators::Sine;
+use crate::generators::Stuff;
 
 #[derive(Debug)]
 pub struct SignalApp {
-    sine: Arc<RwLock<Sine>>,
+    sine: Arc<RwLock<Stuff>>,
 }
 
 impl SignalApp {
     pub fn new() -> Self {
         Self {
-            sine: Sine::new(1., 48_000),
+            sine: Stuff::new(100., 48_000),
         }
     }
 }
 
 impl App for SignalApp {
     fn name(&self) -> &'static str {
-        "Signal"
+        "Signal transport"
     }
 
     fn setup(
@@ -42,14 +42,13 @@ impl App for SignalApp {
             .resizable(true)
             .show(ctx, |ui| {
                 let values = match self.sine.try_read() {
-                    Some(unlocked) => unlocked.samples.take_last(10_000),
+                    Some(unlocked) => unlocked.samples.take_last(4_000),
                     None => return,
                 };
 
-                let line = Line::new(values);
+                let line = Line::new(values).width(2.);
 
                 Plot::new("sine")
-                    .view_aspect(2.0)
                     .allow_zoom(false)
                     .center_y_axis(true)
                     .show(ui, |plot_ui| plot_ui.line(line));

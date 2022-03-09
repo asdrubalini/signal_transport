@@ -10,16 +10,20 @@ use parking_lot::RwLock;
 
 use crate::samples::Samples;
 
+pub trait SignalGenerator {
+    fn generate_sample(t: f64) -> Value;
+}
+
 #[derive(Debug)]
-pub struct Sine {
+pub struct Stuff {
     pub samples: Samples,
     signal_frequency: f64,
     sample_frequency: u32,
 }
 
-impl Sine {
+impl Stuff {
     pub fn new(signal_frequency: f64, sample_frequency: u32) -> Arc<RwLock<Self>> {
-        let sine = Sine {
+        let sine = Stuff {
             samples: Samples::new(200_000),
             signal_frequency,
             sample_frequency,
