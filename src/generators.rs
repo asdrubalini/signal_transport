@@ -93,7 +93,7 @@ impl Sine {
 
         drop(read_lock);
 
-        let mut internal_buffer: Vec<Value> = Vec::with_capacity(1000);
+        let mut internal_buffer: Vec<Value> = Vec::with_capacity(32);
 
         loop {
             let cycle_start = Instant::now();

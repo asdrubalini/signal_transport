@@ -3,7 +3,7 @@ use std::sync::Arc;
 use eframe::epi::{App, Frame};
 use egui::{
     plot::{Line, Plot},
-    Context, Vec2, Visuals, Window,
+    Context, Visuals, Window,
 };
 use parking_lot::RwLock;
 
