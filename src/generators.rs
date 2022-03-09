@@ -1,12 +1,13 @@
 use std::{
     collections::VecDeque,
     f64::consts::PI,
-    sync::{Arc, RwLock},
+    sync::Arc,
     thread,
     time::{Duration, Instant},
 };
 
 use egui::plot::{Value, Values};
+use parking_lot::RwLock;
 
 #[derive(Debug)]
 pub struct Samples {
@@ -84,7 +85,7 @@ impl Sine {
     }
 
     fn start_thread(handle: Arc<RwLock<Self>>) {
-        let read_lock = handle.read().unwrap();
+        let read_lock = handle.read();
 
         let start = Instant::now();
         let period_ns = ((1. / read_lock.sample_frequency as f64) * 1_000_000_000.0) as u64;
@@ -102,7 +103,7 @@ impl Sine {
             let sample = Value::new(t, y);
 
             match handle.try_write() {
-                Ok(mut write_guard) => {
+                Some(mut write_guard) => {
                     // First flush internal buffer
                     if !internal_buffer.is_empty() {
                         write_guard.samples.insert_many(&internal_buffer);
@@ -111,21 +112,16 @@ impl Sine {
 
                     write_guard.samples.insert(sample);
                 }
-                Err(_) => {
+                None => {
                     // Write to a buffer if we can't lock the mutex
                     internal_buffer.push(sample);
                 }
             }
 
             let cycle_took_ns = cycle_start.elapsed().as_nanos() as u64;
-            let sleep_ns = if cycle_took_ns > period_ns {
-                println!("zero ");
-                0
-            } else {
-                period_ns - cycle_took_ns
-            };
-
-            thread::sleep(Duration::from_nanos(sleep_ns));
+            if cycle_took_ns < period_ns {
+                thread::sleep(Duration::from_nanos(period_ns - cycle_took_ns));
+            }
         }
     }
 }
