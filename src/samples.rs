@@ -4,15 +4,15 @@ use egui::plot::{Value, Values};
 
 #[derive(Debug)]
 pub struct Samples {
-    inner: VecDeque<Value>,
     max_samples: usize,
+    inner: VecDeque<Value>,
 }
 
 impl Samples {
     pub fn new(max_samples: usize) -> Self {
         Samples {
-            inner: VecDeque::with_capacity(max_samples),
             max_samples,
+            inner: VecDeque::with_capacity(max_samples),
         }
     }
 
@@ -23,33 +23,10 @@ impl Samples {
 
         self.inner.push_back(sample);
     }
+}
 
-    pub fn insert_many(&mut self, samples: &[Value]) {
-        let items_to_pop_count = if self.inner.len() + samples.len() <= self.max_samples {
-            0
-        } else {
-            self.inner.len() + samples.len() - self.max_samples
-        };
-
-        for _ in 0..items_to_pop_count {
-            self.inner.pop_front().unwrap();
-        }
-
-        self.inner.extend(samples.iter().map(ToOwned::to_owned));
-    }
-
-    pub fn take_last(&self, count: usize) -> Values {
-        Values::from_values_iter(
-            self.inner
-                .iter()
-                .rev()
-                .take(count)
-                .rev()
-                .map(ToOwned::to_owned),
-        )
-    }
-
-    pub fn take_all(&self) -> Values {
-        Values::from_values_iter(self.inner.iter().map(ToOwned::to_owned))
+impl From<&Samples> for Values {
+    fn from(samples: &Samples) -> Self {
+        Values::from_values_iter(samples.inner.iter().map(ToOwned::to_owned))
     }
 }
