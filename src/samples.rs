@@ -48,4 +48,8 @@ impl Samples {
                 .map(ToOwned::to_owned),
         )
     }
+
+    pub fn take_all(&self) -> Values {
+        Values::from_values_iter(self.inner.iter().map(ToOwned::to_owned))
+    }
 }

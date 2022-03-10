@@ -1,6 +1,7 @@
 mod app;
 mod generators;
 mod samples;
+mod traits;
 
 use app::SignalApp;
 use eframe::NativeOptions;

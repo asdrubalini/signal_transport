@@ -1,23 +1,17 @@
-use std::sync::Arc;
-
 use eframe::epi::{App, Frame};
-use egui::{
-    plot::{Line, Plot},
-    Context, Visuals, Window,
-};
-use parking_lot::RwLock;
+use egui::{Context, Visuals};
 
-use crate::generators::Stuff;
+use crate::{generators::Sine, traits::Draw};
 
 #[derive(Debug)]
 pub struct SignalApp {
-    sine: Arc<RwLock<Stuff>>,
+    sine: Sine,
 }
 
 impl SignalApp {
     pub fn new() -> Self {
         Self {
-            sine: Stuff::new(100., 48_000),
+            sine: Sine::new(80., 48_000),
         }
     }
 }
@@ -37,23 +31,8 @@ impl App for SignalApp {
     }
 
     fn update(&mut self, ctx: &Context, _frame: &Frame) {
-        Window::new("Sine")
-            .open(&mut true)
-            .resizable(true)
-            .show(ctx, |ui| {
-                let values = match self.sine.try_read() {
-                    Some(unlocked) => unlocked.samples.take_last(4_000),
-                    None => return,
-                };
-
-                let line = Line::new(values).width(2.);
-
-                Plot::new("sine")
-                    .allow_zoom(false)
-                    .center_y_axis(true)
-                    .show(ui, |plot_ui| plot_ui.line(line));
-            });
-
         ctx.request_repaint();
+
+        self.sine.draw(ctx);
     }
 }
