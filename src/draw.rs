@@ -2,43 +2,41 @@ use std::{sync::Arc, thread};
 
 use egui::{
     plot::{Line, Plot, Value, Values},
-    Context, Window,
+    Context, Ui,
 };
 use flume::{Receiver, Sender};
 use parking_lot::RwLock;
 
 use crate::samples::Samples;
 
-/// Something that can be drawn
-pub trait Draw {
-    fn draw(&mut self, ctx: &Context);
+pub trait WidgetDraw {
+    fn widget_draw(&mut self, ui: &mut Ui);
+}
+
+pub trait ContextDraw {
+    fn context_draw(&mut self, ctx: &Context);
 }
 
 #[derive(Debug, Clone)]
 pub struct WaveDrawer {
-    name: String,
+    pub name: String,
     samples_buffer: Arc<RwLock<Samples>>,
     samples_tx: Sender<Value>,
 }
 
-impl Draw for WaveDrawer {
-    fn draw(&mut self, ctx: &Context) {
-        Window::new(&self.name)
-            .open(&mut true)
-            .resizable(true)
-            .show(ctx, |ui| {
-                let values = match self.samples_buffer.try_read() {
-                    Some(samples) => Values::from(&*samples),
-                    None => return,
-                };
-                let line = Line::new(values).width(2.);
+impl WidgetDraw for WaveDrawer {
+    fn widget_draw(&mut self, ui: &mut Ui) {
+        let values = match self.samples_buffer.try_read() {
+            Some(samples) => Values::from(&*samples),
+            None => return,
+        };
+        let line = Line::new(values).width(2.);
 
-                Plot::new(&self.name)
-                    .allow_zoom(false)
-                    .view_aspect(2.0)
-                    .center_y_axis(true)
-                    .show(ui, |plot_ui| plot_ui.line(line));
-            });
+        Plot::new(&self.name)
+            .allow_zoom(false)
+            .view_aspect(2.0)
+            .center_y_axis(true)
+            .show(ui, |plot_ui| plot_ui.line(line));
     }
 }
 

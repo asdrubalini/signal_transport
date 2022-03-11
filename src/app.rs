@@ -7,19 +7,19 @@ use eframe::epi::{App, Frame};
 use egui::{Context, Visuals};
 
 use crate::{
-    draw::Draw,
-    generators::{Sine, Square, Wave},
+    draw::ContextDraw,
+    generators::{SineModulated, Square, Wave},
 };
 
 pub struct SignalApp {
-    sine: Sine,
+    sine: SineModulated,
     square: Square,
 }
 
 impl SignalApp {
     pub fn new() -> Self {
-        let sine = Sine::new(2., 10_000);
-        let square = Square::new(2., 10_000);
+        let sine = SineModulated::new(0.5, 5.);
+        let square = Square::new(2.);
         let start = Instant::now();
 
         {
@@ -54,9 +54,9 @@ impl App for SignalApp {
     }
 
     fn update(&mut self, ctx: &Context, _frame: &Frame) {
-        ctx.request_repaint();
+        self.sine.context_draw(ctx);
+        self.square.context_draw(ctx);
 
-        self.sine.drawer.draw(ctx);
-        self.square.drawer.draw(ctx);
+        // ctx.request_repaint();
     }
 }
