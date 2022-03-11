@@ -4,6 +4,8 @@ use egui::{plot::Value, Window};
 
 use crate::draw::{ContextDraw, WaveDrawer, WidgetDraw};
 
+const BUFFER_SIZE: usize = 5_000;
+
 pub trait Wave {
     #[must_use]
     fn get(&mut self, time: f64) -> Value;
@@ -11,13 +13,13 @@ pub trait Wave {
 
 #[derive(Clone)]
 pub struct Sine {
-    drawer: WaveDrawer,
+    pub drawer: WaveDrawer,
     frequency: f64,
 }
 
 impl Sine {
     pub fn new(frequency: f64) -> Self {
-        let drawer = WaveDrawer::new("Sine", 2_000);
+        let drawer = WaveDrawer::new("Sine", BUFFER_SIZE);
         Sine { drawer, frequency }
     }
 }
@@ -49,7 +51,7 @@ impl ContextDraw for Sine {
 #[derive(Clone)]
 pub struct SineModulated {
     sine: Sine,
-    drawer: WaveDrawer,
+    pub drawer: WaveDrawer,
     carrier_frequency: f64,
 }
 
@@ -72,7 +74,7 @@ impl ContextDraw for SineModulated {
 
 impl SineModulated {
     pub fn new(carrier_frequency: f64, modulating_frequency: f64) -> Self {
-        let drawer = WaveDrawer::new("Sine FM", 2_000);
+        let drawer = WaveDrawer::new("Sine FM", BUFFER_SIZE);
         let sine = Sine::new(modulating_frequency);
 
         SineModulated {
@@ -115,7 +117,7 @@ impl ContextDraw for Square {
 
 impl Square {
     pub fn new(frequency: f64) -> Self {
-        let drawer = WaveDrawer::new("Square", 5_000);
+        let drawer = WaveDrawer::new("Square", BUFFER_SIZE);
         Square { drawer, frequency }
     }
 }

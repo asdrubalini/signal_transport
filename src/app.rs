@@ -1,10 +1,13 @@
 use std::{
+    ops::DerefMut,
+    sync::Arc,
     thread::{self, sleep},
     time::{Duration, Instant},
 };
 
 use eframe::epi::{App, Frame};
-use egui::{Context, Visuals};
+use egui::{Context, Slider, Visuals};
+use parking_lot::Mutex;
 
 use crate::{
     draw::ContextDraw,
@@ -14,6 +17,7 @@ use crate::{
 pub struct SignalApp {
     sine: SineModulated,
     square: Square,
+    speed_factor: Arc<Mutex<f64>>,
 }
 
 impl SignalApp {
@@ -22,20 +26,34 @@ impl SignalApp {
         let square = Square::new(2.);
         let start = Instant::now();
 
+        let speed_factor = Arc::new(Mutex::from(1.0));
+
         {
             let mut sine = sine.clone();
             let mut square = square.clone();
+            let slowdown_factor = Arc::clone(&speed_factor);
+            let mut last_known_speed_factor = *slowdown_factor.lock();
 
             thread::spawn(move || loop {
-                let t = start.elapsed().as_secs_f64();
+                if let Some(speed_factor) = slowdown_factor.try_lock() {
+                    last_known_speed_factor = *speed_factor;
+                };
+
+                let t = start.elapsed().as_secs_f64() * last_known_speed_factor;
                 let _ = sine.get(t);
                 let _ = square.get(t);
 
-                sleep(Duration::from_nanos(16000));
+                sleep(Duration::from_nanos(
+                    (16_000. / last_known_speed_factor) as u64,
+                ));
             });
         }
 
-        Self { sine, square }
+        Self {
+            sine,
+            square,
+            speed_factor,
+        }
     }
 }
 
@@ -57,6 +75,11 @@ impl App for SignalApp {
         self.sine.context_draw(ctx);
         self.square.context_draw(ctx);
 
-        // ctx.request_repaint();
+        egui::TopBottomPanel::bottom("slowdown_slider").show(ctx, |ui| {
+            let mut speed_factor = self.speed_factor.lock();
+            ui.add(Slider::new(speed_factor.deref_mut(), 1.0..=0.01).text("Speed factor"));
+        });
+
+        ctx.request_repaint();
     }
 }
