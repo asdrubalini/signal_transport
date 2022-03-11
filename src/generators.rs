@@ -22,6 +22,10 @@ impl Sine {
         let drawer = WaveDrawer::new("Sine", BUFFER_SIZE);
         Sine { drawer, frequency }
     }
+
+    pub fn clear(&mut self) {
+        self.drawer.clear();
+    }
 }
 
 impl Wave for Sine {
@@ -83,6 +87,11 @@ impl SineModulated {
             carrier_frequency,
         }
     }
+
+    pub fn clear(&mut self) {
+        self.drawer.clear();
+        self.sine.clear();
+    }
 }
 
 impl Wave for SineModulated {
@@ -119,6 +128,10 @@ impl Square {
     pub fn new(frequency: f64) -> Self {
         let drawer = WaveDrawer::new("Square", BUFFER_SIZE);
         Square { drawer, frequency }
+    }
+
+    pub fn clear(&mut self) {
+        self.drawer.clear();
     }
 }
 

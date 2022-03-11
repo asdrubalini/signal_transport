@@ -67,4 +67,8 @@ impl WaveDrawer {
     pub fn sample_insert(&self, sample: Value) {
         self.samples_tx.send(sample).unwrap();
     }
+
+    pub fn clear(&mut self) {
+        self.samples_buffer.write().clear();
+    }
 }

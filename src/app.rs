@@ -36,6 +36,12 @@ impl SignalApp {
 
             thread::spawn(move || loop {
                 if let Some(speed_factor) = slowdown_factor.try_lock() {
+                    // Cleanup plots if speed factor has been changed
+                    if last_known_speed_factor != *speed_factor {
+                        sine.clear();
+                        square.clear();
+                    }
+
                     last_known_speed_factor = *speed_factor;
                 };
 
@@ -75,9 +81,9 @@ impl App for SignalApp {
         self.sine.context_draw(ctx);
         self.square.context_draw(ctx);
 
-        egui::TopBottomPanel::bottom("slowdown_slider").show(ctx, |ui| {
+        egui::TopBottomPanel::bottom("speed_factor").show(ctx, |ui| {
             let mut speed_factor = self.speed_factor.lock();
-            ui.add(Slider::new(speed_factor.deref_mut(), 1.0..=0.01).text("Speed factor"));
+            ui.add(Slider::new(speed_factor.deref_mut(), 1.0..=0.001).text("Speed factor"));
         });
 
         ctx.request_repaint();

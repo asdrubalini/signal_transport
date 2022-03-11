@@ -23,6 +23,10 @@ impl Samples {
 
         self.inner.push_back(sample);
     }
+
+    pub fn clear(&mut self) {
+        self.inner.clear();
+    }
 }
 
 impl From<&Samples> for Values {
