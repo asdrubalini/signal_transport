@@ -1,8 +1,4 @@
-use std::f64::consts::PI;
-
-use egui::{plot::Value, Window};
-
-use crate::draw::{ContextDraw, WaveDrawer, WidgetDraw};
+use egui::plot::Value;
 
 const BUFFER_SIZE: usize = 5_000;
 
@@ -11,144 +7,164 @@ pub trait Wave {
     fn get(&mut self, time: f64) -> Value;
 }
 
-#[derive(Clone)]
-pub struct Sine {
-    pub drawer: WaveDrawer,
-    frequency: f64,
-}
+pub mod sine {
+    use std::f64::consts::PI;
 
-impl Sine {
-    pub fn new(frequency: f64) -> Self {
-        let drawer = WaveDrawer::new("Sine", BUFFER_SIZE);
-        Sine { drawer, frequency }
+    use egui::{plot::Value, Window};
+
+    use crate::draw::{ContextDraw, WaveDrawer, WidgetDraw};
+
+    use super::{Wave, BUFFER_SIZE};
+
+    #[derive(Clone)]
+    pub struct Sine {
+        pub drawer: WaveDrawer,
+        frequency: f64,
     }
 
-    pub fn clear(&mut self) {
-        self.drawer.clear();
-    }
-}
+    impl Sine {
+        pub fn new(frequency: f64) -> Self {
+            let drawer = WaveDrawer::new("Sine", BUFFER_SIZE);
+            Sine { drawer, frequency }
+        }
 
-impl Wave for Sine {
-    fn get(&mut self, time: f64) -> Value {
-        let y = (2. * PI * self.frequency * time).sin() * i8::MAX as f64;
-        let sample = Value::new(time, y);
-        self.drawer.sample_insert(sample);
-        sample
-    }
-}
-
-impl WidgetDraw for Sine {
-    fn widget_draw(&mut self, ui: &mut egui::Ui) {
-        self.drawer.widget_draw(ui);
-    }
-}
-
-impl ContextDraw for Sine {
-    fn context_draw(&mut self, ctx: &egui::Context) {
-        Window::new(&self.drawer.name)
-            .open(&mut true)
-            .resizable(false)
-            .show(ctx, |ui| self.widget_draw(ui));
-    }
-}
-
-#[derive(Clone)]
-pub struct SineModulated {
-    sine: Sine,
-    pub drawer: WaveDrawer,
-    carrier_frequency: f64,
-}
-
-impl WidgetDraw for SineModulated {
-    fn widget_draw(&mut self, ui: &mut egui::Ui) {
-        self.drawer.widget_draw(ui);
-    }
-}
-
-impl ContextDraw for SineModulated {
-    fn context_draw(&mut self, ctx: &egui::Context) {
-        self.sine.context_draw(ctx);
-
-        Window::new(&self.drawer.name)
-            .open(&mut true)
-            .resizable(false)
-            .show(ctx, |ui| self.widget_draw(ui));
-    }
-}
-
-impl SineModulated {
-    pub fn new(carrier_frequency: f64, modulating_frequency: f64) -> Self {
-        let drawer = WaveDrawer::new("Sine FM", BUFFER_SIZE);
-        let sine = Sine::new(modulating_frequency);
-
-        SineModulated {
-            sine,
-            drawer,
-            carrier_frequency,
+        pub fn clear(&mut self) {
+            self.drawer.clear();
         }
     }
 
-    pub fn clear(&mut self) {
-        self.drawer.clear();
-        self.sine.clear();
+    impl Wave for Sine {
+        fn get(&mut self, time: f64) -> Value {
+            let y = (2. * PI * self.frequency * time).sin() * i8::MAX as f64;
+            let sample = Value::new(time, y);
+            self.drawer.sample_insert(sample);
+            sample
+        }
+    }
+
+    impl WidgetDraw for Sine {
+        fn widget_draw(&mut self, ui: &mut egui::Ui) {
+            self.drawer.widget_draw(ui);
+        }
+    }
+
+    impl ContextDraw for Sine {
+        fn context_draw(&mut self, ctx: &egui::Context) {
+            Window::new(&self.drawer.name)
+                .open(&mut true)
+                .resizable(false)
+                .show(ctx, |ui| self.widget_draw(ui));
+        }
+    }
+
+    #[derive(Clone)]
+    pub struct SineModulated {
+        sine: Sine,
+        pub drawer: WaveDrawer,
+        carrier_frequency: f64,
+    }
+
+    impl WidgetDraw for SineModulated {
+        fn widget_draw(&mut self, ui: &mut egui::Ui) {
+            self.drawer.widget_draw(ui);
+        }
+    }
+
+    impl ContextDraw for SineModulated {
+        fn context_draw(&mut self, ctx: &egui::Context) {
+            self.sine.context_draw(ctx);
+
+            Window::new(&self.drawer.name)
+                .open(&mut true)
+                .resizable(false)
+                .show(ctx, |ui| self.widget_draw(ui));
+        }
+    }
+
+    impl SineModulated {
+        pub fn new(carrier_frequency: f64, modulating_frequency: f64) -> Self {
+            let drawer = WaveDrawer::new("Sine FM", BUFFER_SIZE);
+            let sine = Sine::new(modulating_frequency);
+
+            SineModulated {
+                sine,
+                drawer,
+                carrier_frequency,
+            }
+        }
+
+        pub fn clear(&mut self) {
+            self.drawer.clear();
+            self.sine.clear();
+        }
+    }
+
+    impl Wave for SineModulated {
+        fn get(&mut self, time: f64) -> Value {
+            let y = (2. * PI * self.carrier_frequency + self.sine.get(time).y).sin();
+            let sample = Value::new(time, y);
+            self.drawer.sample_insert(sample);
+            sample
+        }
     }
 }
 
-impl Wave for SineModulated {
-    fn get(&mut self, time: f64) -> Value {
-        let y = (2. * PI * self.carrier_frequency + self.sine.get(time).y).sin();
-        let sample = Value::new(time, y);
-        self.drawer.sample_insert(sample);
-        sample
-    }
-}
+pub mod square {
+    use std::f64::consts::PI;
 
-#[derive(Clone)]
-pub struct Square {
-    drawer: WaveDrawer,
-    frequency: f64,
-}
+    use egui::{plot::Value, Window};
 
-impl WidgetDraw for Square {
-    fn widget_draw(&mut self, ui: &mut egui::Ui) {
-        self.drawer.widget_draw(ui);
-    }
-}
+    use crate::draw::{ContextDraw, WaveDrawer, WidgetDraw};
 
-impl ContextDraw for Square {
-    fn context_draw(&mut self, ctx: &egui::Context) {
-        Window::new(&self.drawer.name)
-            .open(&mut true)
-            .resizable(false)
-            .show(ctx, |ui| self.widget_draw(ui));
-    }
-}
+    use super::{Wave, BUFFER_SIZE};
 
-impl Square {
-    pub fn new(frequency: f64) -> Self {
-        let drawer = WaveDrawer::new("Square", BUFFER_SIZE);
-        Square { drawer, frequency }
+    #[derive(Clone)]
+    pub struct Square {
+        drawer: WaveDrawer,
+        frequency: f64,
     }
 
-    pub fn clear(&mut self) {
-        self.drawer.clear();
+    impl WidgetDraw for Square {
+        fn widget_draw(&mut self, ui: &mut egui::Ui) {
+            self.drawer.widget_draw(ui);
+        }
     }
-}
 
-impl Wave for Square {
-    fn get(&mut self, time: f64) -> Value {
-        let y = (2. * PI * self.frequency * time).sin();
+    impl ContextDraw for Square {
+        fn context_draw(&mut self, ctx: &egui::Context) {
+            Window::new(&self.drawer.name)
+                .open(&mut true)
+                .resizable(false)
+                .show(ctx, |ui| self.widget_draw(ui));
+        }
+    }
 
-        let y = if y > 0.0 {
-            i8::MAX
-        } else if y < 0.0 {
-            i8::MIN
-        } else {
-            0
-        };
+    impl Square {
+        pub fn new(frequency: f64) -> Self {
+            let drawer = WaveDrawer::new("Square", BUFFER_SIZE);
+            Square { drawer, frequency }
+        }
 
-        let sample = Value::new(time, y);
-        self.drawer.sample_insert(sample);
-        sample
+        pub fn clear(&mut self) {
+            self.drawer.clear();
+        }
+    }
+
+    impl Wave for Square {
+        fn get(&mut self, time: f64) -> Value {
+            let y = (2. * PI * self.frequency * time).sin();
+
+            let y = if y > 0.0 {
+                i8::MAX
+            } else if y < 0.0 {
+                i8::MIN
+            } else {
+                0
+            };
+
+            let sample = Value::new(time, y);
+            self.drawer.sample_insert(sample);
+            sample
+        }
     }
 }

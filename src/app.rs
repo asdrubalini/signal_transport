@@ -11,7 +11,8 @@ use parking_lot::Mutex;
 
 use crate::{
     draw::ContextDraw,
-    generators::{SineModulated, Square, Wave},
+    generators::square::Square,
+    generators::{sine::SineModulated, Wave},
 };
 
 pub struct SignalApp {
@@ -22,8 +23,8 @@ pub struct SignalApp {
 
 impl SignalApp {
     pub fn new() -> Self {
-        let sine = SineModulated::new(0.5, 5.);
-        let square = Square::new(2.);
+        let sine = SineModulated::new(5.0, 0.5);
+        let square = Square::new(0.5);
         let start = Instant::now();
 
         let speed_factor = Arc::new(Mutex::from(1.0));
@@ -55,7 +56,7 @@ impl SignalApp {
             });
         }
 
-        Self {
+        SignalApp {
             sine,
             square,
             speed_factor,
