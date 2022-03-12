@@ -5,8 +5,12 @@ use std::{
     time::{Duration, Instant},
 };
 
-use eframe::epi::{App, Frame};
-use egui::{Context, Slider, Visuals};
+use eframe::{
+    epaint::CubicBezierShape,
+    epi::{App, Frame},
+};
+use egui::{pos2, Color32, Context, Sense, Shape, Slider, Stroke, Visuals};
+use epaint::Vec2;
 use parking_lot::Mutex;
 
 use crate::{
@@ -86,6 +90,26 @@ impl App for SignalApp {
             let mut speed_factor = self.speed_factor.lock();
             ui.add(Slider::new(speed_factor.deref_mut(), 1.0..=0.001).text("Speed factor"));
         });
+
+        // egui::CentralPanel::default().show(&ctx, |ui| {
+        // let ciao = Shape::CubicBezier(CubicBezierShape::from_points_stroke(
+        // [
+        // pos2(0., 0.),
+        // pos2(200., 200.),
+        // pos2(400., 400.),
+        // pos2(320., 320.),
+        // ],
+        // false,
+        // Color32::WHITE,
+        // Stroke::none(),
+        // ));
+
+        // let (_response, painter) = ui.allocate_painter(
+        // Vec2::new(ui.available_width(), ui.available_height()),
+        // Sense::hover(),
+        // );
+        // painter.add(ciao);
+        // });
 
         ctx.request_repaint();
     }

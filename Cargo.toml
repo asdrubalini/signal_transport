@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 eframe = "0.17"
 egui = "0.17"
+epaint = "0.17"
 parking_lot = "0.12"
 flume = "0.10"
 

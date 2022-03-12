@@ -50,7 +50,9 @@ pub mod sine {
 
     impl ContextDraw for Sine {
         fn context_draw(&mut self, ctx: &egui::Context) {
-            Window::new(&self.drawer.name)
+            let window = Window::new(&self.drawer.name);
+
+            window
                 .open(&mut true)
                 .resizable(false)
                 .show(ctx, |ui| self.widget_draw(ui));
