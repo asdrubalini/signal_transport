@@ -5,12 +5,8 @@ use std::{
     time::{Duration, Instant},
 };
 
-use eframe::{
-    epaint::CubicBezierShape,
-    epi::{App, Frame},
-};
-use egui::{pos2, Color32, Context, Sense, Shape, Slider, Stroke, Visuals};
-use epaint::Vec2;
+use eframe::epi::{App, Frame};
+use egui::{Context, Slider, Visuals};
 use parking_lot::Mutex;
 
 use crate::{
