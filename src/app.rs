@@ -10,7 +10,7 @@ use egui::{Context, Slider, Visuals};
 use parking_lot::Mutex;
 
 use crate::{
-    consts::SAMPLE_FREQUENCY,
+    consts::{MUTEX_LOCK_EVERY_N_CYCLES, SAMPLE_FREQUENCY},
     draw::ContextDraw,
     generators::square::SquareModulated,
     generators::{sine::SineModulated, Wave},
@@ -38,18 +38,27 @@ impl SignalApp {
 
             let sample_period_ns = ((1.0 / SAMPLE_FREQUENCY) * 1_000_000_000.) as u128;
 
+            let mut iteration_count = 0;
+
             thread::spawn(move || loop {
                 let loop_start = Instant::now();
 
-                if let Some(speed_factor) = slowdown_factor.try_lock() {
-                    // Cleanup plots if speed factor has been changed
-                    if last_known_speed_factor != *speed_factor {
-                        sine.clear();
-                        square.clear();
-                    }
+                // Don't always try Mutex lock since we are in the hot path
+                if iteration_count == MUTEX_LOCK_EVERY_N_CYCLES {
+                    if let Some(speed_factor) = slowdown_factor.try_lock() {
+                        // Cleanup plots if speed factor has been changed
+                        if last_known_speed_factor != *speed_factor {
+                            sine.clear();
+                            square.clear();
+                        }
 
-                    last_known_speed_factor = *speed_factor;
-                };
+                        last_known_speed_factor = *speed_factor;
+                    };
+
+                    iteration_count = 0;
+                }
+
+                iteration_count += 1;
 
                 let t = start.elapsed().as_secs_f64() * last_known_speed_factor;
                 let _ = sine.get(t);
@@ -93,7 +102,7 @@ impl App for SignalApp {
 
         egui::TopBottomPanel::bottom("speed_factor").show(ctx, |ui| {
             let mut speed_factor = self.speed_factor.lock();
-            ui.add(Slider::new(speed_factor.deref_mut(), 1.0..=0.01).text("Speed factor"));
+            ui.add(Slider::new(speed_factor.deref_mut(), 0.25..=0.001).text("Speed factor"));
         });
 
         // egui::CentralPanel::default().show(&ctx, |ui| {

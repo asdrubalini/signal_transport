@@ -70,14 +70,12 @@ impl WaveDrawer {
     pub fn sample_insert(&mut self, sample: Value) {
         // No need to draw each sample
 
-        if self.draw_counter == 0 {
+        if self.draw_counter == DRAW_EACH_N_SAMPLES {
             self.samples_tx.send(sample).unwrap();
-            self.draw_counter += 1;
-        } else if self.draw_counter == DRAW_EACH_N_SAMPLES {
             self.draw_counter = 0;
-        } else {
-            self.draw_counter += 1;
         }
+
+        self.draw_counter += 1;
     }
 
     pub fn clear(&mut self) {
