@@ -7,7 +7,7 @@ use egui::{
 use flume::{Receiver, Sender};
 use parking_lot::RwLock;
 
-use crate::samples::Samples;
+use crate::{consts::DRAW_EACH_N_SAMPLES, samples::Samples};
 
 pub trait WidgetDraw {
     fn widget_draw(&mut self, ui: &mut Ui);
@@ -22,6 +22,7 @@ pub struct WaveDrawer {
     pub name: String,
     samples_buffer: Arc<RwLock<Samples>>,
     samples_tx: Sender<Value>,
+    draw_counter: u32,
 }
 
 impl WidgetDraw for WaveDrawer {
@@ -42,13 +43,14 @@ impl WidgetDraw for WaveDrawer {
 }
 
 impl WaveDrawer {
-    pub fn new(name: &str, buffer_size: usize) -> Self {
+    pub fn new(name: &str, buffer_size: u32) -> Self {
         let (samples_tx, samples_rx) = flume::unbounded::<Value>();
 
         let drawer = WaveDrawer {
             name: name.to_string(),
             samples_buffer: Arc::new(RwLock::from(Samples::new(buffer_size))),
             samples_tx,
+            draw_counter: 0,
         };
 
         Self::buffer_sync_thread_start(Arc::clone(&drawer.samples_buffer), samples_rx);
@@ -64,8 +66,18 @@ impl WaveDrawer {
         });
     }
 
-    pub fn sample_insert(&self, sample: Value) {
-        self.samples_tx.send(sample).unwrap();
+    #[inline]
+    pub fn sample_insert(&mut self, sample: Value) {
+        // No need to draw each sample
+
+        if self.draw_counter == 0 {
+            self.samples_tx.send(sample).unwrap();
+            self.draw_counter += 1;
+        } else if self.draw_counter == DRAW_EACH_N_SAMPLES {
+            self.draw_counter = 0;
+        } else {
+            self.draw_counter += 1;
+        }
     }
 
     pub fn clear(&mut self) {

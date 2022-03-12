@@ -1,7 +1,5 @@
 use egui::plot::Value;
 
-const BUFFER_SIZE: usize = 2_500;
-
 pub trait Wave {
     #[must_use]
     fn get(&mut self, time: f64) -> Value;
@@ -12,19 +10,22 @@ pub mod sine {
 
     use egui::{plot::Value, Window};
 
-    use crate::draw::{ContextDraw, WaveDrawer, WidgetDraw};
+    use crate::{
+        consts::DRAW_BUFFER_SIZE,
+        draw::{ContextDraw, WaveDrawer, WidgetDraw},
+    };
 
-    use super::{Wave, BUFFER_SIZE};
+    use super::Wave;
 
     #[derive(Clone)]
-    pub struct Sine {
-        pub drawer: WaveDrawer,
+    struct Sine {
+        drawer: WaveDrawer,
         frequency: f64,
     }
 
     impl Sine {
         pub fn new(frequency: f64) -> Self {
-            let drawer = WaveDrawer::new("Sine", BUFFER_SIZE);
+            let drawer = WaveDrawer::new("Sine", DRAW_BUFFER_SIZE);
             Sine { drawer, frequency }
         }
 
@@ -53,7 +54,7 @@ pub mod sine {
             let window = Window::new(&self.drawer.name);
 
             window
-                .open(&mut true)
+                .open(&mut false)
                 .resizable(false)
                 .show(ctx, |ui| self.widget_draw(ui));
         }
@@ -62,7 +63,7 @@ pub mod sine {
     #[derive(Clone)]
     pub struct SineModulated {
         sine: Sine,
-        pub drawer: WaveDrawer,
+        drawer: WaveDrawer,
         carrier_frequency: f64,
     }
 
@@ -85,7 +86,7 @@ pub mod sine {
 
     impl SineModulated {
         pub fn new(carrier_frequency: f64, modulating_frequency: f64) -> Self {
-            let drawer = WaveDrawer::new("Sine FM", BUFFER_SIZE);
+            let drawer = WaveDrawer::new("Sine FM", DRAW_BUFFER_SIZE);
             let sine = Sine::new(modulating_frequency);
 
             SineModulated {
@@ -116,12 +117,15 @@ pub mod square {
 
     use egui::{plot::Value, Window};
 
-    use crate::draw::{ContextDraw, WaveDrawer, WidgetDraw};
+    use crate::{
+        consts::DRAW_BUFFER_SIZE,
+        draw::{ContextDraw, WaveDrawer, WidgetDraw},
+    };
 
-    use super::{Wave, BUFFER_SIZE};
+    use super::Wave;
 
     #[derive(Clone)]
-    pub struct Square {
+    struct Square {
         drawer: WaveDrawer,
         frequency: f64,
     }
@@ -135,7 +139,7 @@ pub mod square {
     impl ContextDraw for Square {
         fn context_draw(&mut self, ctx: &egui::Context) {
             Window::new(&self.drawer.name)
-                .open(&mut true)
+                .open(&mut false)
                 .resizable(false)
                 .show(ctx, |ui| self.widget_draw(ui));
         }
@@ -143,7 +147,7 @@ pub mod square {
 
     impl Square {
         pub fn new(frequency: f64) -> Self {
-            let drawer = WaveDrawer::new("Square", BUFFER_SIZE);
+            let drawer = WaveDrawer::new("Square", DRAW_BUFFER_SIZE);
             Square { drawer, frequency }
         }
 
@@ -163,6 +167,72 @@ pub mod square {
             } else {
                 0
             };
+
+            let sample = Value::new(time, y);
+            self.drawer.sample_insert(sample);
+            sample
+        }
+    }
+
+    #[derive(Clone)]
+    pub struct SquareModulated {
+        square: Square,
+        drawer: WaveDrawer,
+        carrier_frequency: f64,
+        delta_frequency: f64,
+    }
+
+    impl WidgetDraw for SquareModulated {
+        fn widget_draw(&mut self, ui: &mut egui::Ui) {
+            self.drawer.widget_draw(ui);
+        }
+    }
+
+    impl ContextDraw for SquareModulated {
+        fn context_draw(&mut self, ctx: &egui::Context) {
+            self.square.context_draw(ctx);
+
+            Window::new(&self.drawer.name)
+                .open(&mut true)
+                .resizable(false)
+                .show(ctx, |ui| self.widget_draw(ui));
+        }
+    }
+
+    impl SquareModulated {
+        pub fn new(
+            carrier_frequency: f64,
+            delta_frequency: f64,
+            modulating_frequency: f64,
+        ) -> Self {
+            let drawer = WaveDrawer::new("Square FSK", DRAW_BUFFER_SIZE);
+            let square = Square::new(modulating_frequency);
+
+            SquareModulated {
+                square,
+                drawer,
+                carrier_frequency,
+                delta_frequency,
+            }
+        }
+
+        pub fn clear(&mut self) {
+            self.drawer.clear();
+            self.square.clear();
+        }
+    }
+
+    impl Wave for SquareModulated {
+        fn get(&mut self, time: f64) -> Value {
+            let y = self.square.get(time).y;
+
+            let current_frequency = if y >= 0.0 {
+                self.carrier_frequency + self.delta_frequency
+            } else {
+                self.carrier_frequency - self.delta_frequency
+            };
+
+            let y = (2. * PI * current_frequency * time).sin();
 
             let sample = Value::new(time, y);
             self.drawer.sample_insert(sample);

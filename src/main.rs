@@ -1,4 +1,5 @@
 mod app;
+mod consts;
 mod draw;
 mod generators;
 mod samples;
