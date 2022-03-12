@@ -1,6 +1,6 @@
 use egui::plot::Value;
 
-const BUFFER_SIZE: usize = 5_000;
+const BUFFER_SIZE: usize = 2_500;
 
 pub trait Wave {
     #[must_use]

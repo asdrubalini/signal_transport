@@ -23,8 +23,8 @@ pub struct SignalApp {
 
 impl SignalApp {
     pub fn new() -> Self {
-        let sine = SineModulated::new(5.0, 0.5);
-        let square = Square::new(0.5);
+        let sine = SineModulated::new(10.0, 2.0);
+        let square = Square::new(20.0);
         let start = Instant::now();
 
         let speed_factor = Arc::new(Mutex::from(1.0));
