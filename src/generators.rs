@@ -36,7 +36,7 @@ pub mod sine {
 
     impl Wave for Sine {
         fn get(&mut self, time: f64) -> Value {
-            let y = (2. * PI * self.frequency * time).sin() * i8::MAX as f64;
+            let y = (2. * PI * self.frequency * time).sin();
             let sample = Value::new(time, y);
             self.drawer.sample_insert(sample);
             sample
@@ -65,6 +65,7 @@ pub mod sine {
         sine: Sine,
         drawer: WaveDrawer,
         carrier_frequency: f64,
+        delta_frequency: f64,
     }
 
     impl WidgetDraw for SineModulated {
@@ -85,7 +86,11 @@ pub mod sine {
     }
 
     impl SineModulated {
-        pub fn new(carrier_frequency: f64, modulating_frequency: f64) -> Self {
+        pub fn new(
+            carrier_frequency: f64,
+            modulating_frequency: f64,
+            delta_frequency: f64,
+        ) -> Self {
             let drawer = WaveDrawer::new("Sine FM", DRAW_BUFFER_SIZE);
             let sine = Sine::new(modulating_frequency);
 
@@ -93,6 +98,7 @@ pub mod sine {
                 sine,
                 drawer,
                 carrier_frequency,
+                delta_frequency,
             }
         }
 
@@ -104,7 +110,11 @@ pub mod sine {
 
     impl Wave for SineModulated {
         fn get(&mut self, time: f64) -> Value {
-            let y = (2. * PI * self.carrier_frequency + self.sine.get(time).y).sin();
+            let modulating_signal = self.sine.get(time).y;
+
+            let y = (2. * PI * self.carrier_frequency * time
+                + (self.delta_frequency / self.sine.frequency) * modulating_signal)
+                .cos();
             let sample = Value::new(time, y);
             self.drawer.sample_insert(sample);
             sample
@@ -160,10 +170,10 @@ pub mod square {
         fn get(&mut self, time: f64) -> Value {
             let y = (2. * PI * self.frequency * time).sin();
 
-            let y = if y > 0.0 {
-                i8::MAX
+            let y: i8 = if y > 0.0 {
+                1
             } else if y < 0.0 {
-                i8::MIN
+                -1
             } else {
                 0
             };

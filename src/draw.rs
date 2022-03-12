@@ -7,7 +7,7 @@ use egui::{
 use flume::{Receiver, Sender};
 use parking_lot::RwLock;
 
-use crate::{consts::DRAW_EACH_N_SAMPLES, samples::Samples};
+use crate::{consts::DRAW_EVERY_N_SAMPLES, samples::Samples};
 
 pub trait WidgetDraw {
     fn widget_draw(&mut self, ui: &mut Ui);
@@ -70,7 +70,7 @@ impl WaveDrawer {
     pub fn sample_insert(&mut self, sample: Value) {
         // No need to draw each sample
 
-        if self.draw_counter == DRAW_EACH_N_SAMPLES {
+        if self.draw_counter == DRAW_EVERY_N_SAMPLES {
             self.samples_tx.send(sample).unwrap();
             self.draw_counter = 0;
         }

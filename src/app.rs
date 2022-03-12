@@ -6,7 +6,7 @@ use std::{
 };
 
 use eframe::epi::{App, Frame};
-use egui::{Context, Slider, Visuals};
+use egui::{Context, Layout, Slider, Visuals};
 use parking_lot::Mutex;
 
 use crate::{
@@ -19,22 +19,26 @@ use crate::{
 pub struct SignalApp {
     sine: SineModulated,
     square: SquareModulated,
-    speed_factor: Arc<Mutex<f64>>,
+    slowdown_factor: Arc<Mutex<f64>>,
+    seconds_elapsed: Arc<Mutex<f64>>,
 }
 
 impl SignalApp {
     pub fn new() -> Self {
-        let sine = SineModulated::new(500.0, 10.0);
-        let square = SquareModulated::new(500.0, 250.0, 25.0);
-        let start = Instant::now();
+        let sine = SineModulated::new(20_000.0, 1_000.0, 15_000.0);
+        let square = SquareModulated::new(10_000.0, 5_000.0, 500.0);
+        let mut start = Instant::now();
 
-        let speed_factor = Arc::new(Mutex::from(0.1));
+        let slowdown_factor = Arc::new(Mutex::from(5_000.0));
+        let seconds_elapsed = Arc::new(Mutex::from(0.0));
 
         {
+            let slowdown_factor = Arc::clone(&slowdown_factor);
+            let seconds_elapsed = Arc::clone(&seconds_elapsed);
+
             let mut sine = sine.clone();
             let mut square = square.clone();
-            let slowdown_factor = Arc::clone(&speed_factor);
-            let mut last_known_speed_factor = *slowdown_factor.lock();
+            let mut last_known_slowdown_factor = *slowdown_factor.lock();
 
             let sample_period_ns = ((1.0 / SAMPLE_FREQUENCY) * 1_000_000_000.) as u128;
 
@@ -45,31 +49,40 @@ impl SignalApp {
 
                 // Don't always try Mutex lock since we are in the hot path
                 if iteration_count == MUTEX_LOCK_EVERY_N_CYCLES {
-                    if let Some(speed_factor) = slowdown_factor.try_lock() {
-                        // Cleanup plots if speed factor has been changed
-                        if last_known_speed_factor != *speed_factor {
+                    if let Some(slowdown_factor) = slowdown_factor.try_lock() {
+                        // Cleanup points and reset time if the speed was changed
+                        if last_known_slowdown_factor != *slowdown_factor {
                             sine.clear();
                             square.clear();
+                            start = Instant::now();
                         }
 
-                        last_known_speed_factor = *speed_factor;
+                        last_known_slowdown_factor = *slowdown_factor;
                     };
+
+                    if let Some(mut seconds_elapsed) = seconds_elapsed.try_lock() {
+                        *seconds_elapsed =
+                            start.elapsed().as_secs_f64() / last_known_slowdown_factor;
+                    }
 
                     iteration_count = 0;
                 }
 
                 iteration_count += 1;
 
-                let t = start.elapsed().as_secs_f64() * last_known_speed_factor;
+                let t = start.elapsed().as_secs_f64() / last_known_slowdown_factor;
                 let _ = sine.get(t);
                 let _ = square.get(t);
 
                 let elapsed_ns = loop_start.elapsed().as_nanos();
 
                 if elapsed_ns < sample_period_ns {
-                    let sleep_time =
-                        ((sample_period_ns - elapsed_ns) as f64 / last_known_speed_factor) as u64;
+                    let sleep_time = ((sample_period_ns - elapsed_ns) as f64
+                        * last_known_slowdown_factor) as u64;
+                    println!("not zero");
                     sleep(Duration::from_nanos(sleep_time));
+                } else {
+                    println!("zero {elapsed_ns} {sample_period_ns}");
                 }
             });
         }
@@ -77,7 +90,8 @@ impl SignalApp {
         SignalApp {
             sine,
             square,
-            speed_factor,
+            slowdown_factor,
+            seconds_elapsed,
         }
     }
 }
@@ -101,8 +115,19 @@ impl App for SignalApp {
         self.square.context_draw(ctx);
 
         egui::TopBottomPanel::bottom("speed_factor").show(ctx, |ui| {
-            let mut speed_factor = self.speed_factor.lock();
-            ui.add(Slider::new(speed_factor.deref_mut(), 0.25..=0.001).text("Speed factor"));
+            let mut slowdown_factor = self.slowdown_factor.lock();
+            let seconds_elapsed = *self.seconds_elapsed.lock();
+
+            ui.with_layout(Layout::left_to_right(), |ui| {
+                ui.add(
+                    Slider::new(slowdown_factor.deref_mut(), 100.0..=100_000.0)
+                        .text("Slowdown factor"),
+                );
+
+                ui.separator();
+
+                ui.label(format!("Elapsed: {seconds_elapsed:.5} s"));
+            });
         });
 
         // egui::CentralPanel::default().show(&ctx, |ui| {
