@@ -2,6 +2,7 @@ mod app;
 mod consts;
 mod draw;
 mod generators;
+mod multiplexer;
 mod samples;
 
 use app::SignalApp;

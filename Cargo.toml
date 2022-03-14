@@ -9,6 +9,7 @@ egui = "0.17"
 epaint = "0.17"
 parking_lot = "0.12"
 flume = "0.10"
+rustfft = "6.0"
 
 [profile.release]
 opt-level = 2
