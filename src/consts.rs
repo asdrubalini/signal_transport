@@ -1,4 +1,7 @@
-pub const SAMPLE_FREQUENCY: f64 = 1_000_000.0;
-pub const DRAW_BUFFER_SIZE: u32 = 10_000;
-pub const DRAW_EVERY_N_SAMPLES: u32 = 100;
-pub const MUTEX_LOCK_EVERY_N_CYCLES: usize = 500;
+pub const SAMPLE_FREQUENCY: f64 = 2_500_000.0;
+pub const SAMPLE_PERIOD: f64 = 1.0 / SAMPLE_FREQUENCY;
+pub const SAMPLE_PERIOD_NS: u64 = (SAMPLE_PERIOD * 1_000_000_000.) as u64;
+pub const SAMPLES_PER_CYCLE: u64 = 1_000;
+
+pub const DRAW_BUFFER_SIZE: u32 = 100;
+pub const DRAW_EVERY_N_SAMPLES: u32 = 10;

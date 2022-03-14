@@ -66,7 +66,7 @@ impl WaveDrawer {
         });
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn sample_insert(&mut self, sample: Value) {
         // No need to draw each sample
 

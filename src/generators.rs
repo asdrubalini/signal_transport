@@ -35,6 +35,7 @@ pub mod sine {
     }
 
     impl Wave for Sine {
+        #[inline(always)]
         fn get(&mut self, time: f64) -> Value {
             let y = (2. * PI * self.frequency * time).sin();
             let sample = Value::new(time, y);
@@ -54,7 +55,7 @@ pub mod sine {
             let window = Window::new(&self.drawer.name);
 
             window
-                .open(&mut false)
+                .open(&mut true)
                 .resizable(false)
                 .show(ctx, |ui| self.widget_draw(ui));
         }
@@ -79,7 +80,7 @@ pub mod sine {
             self.sine.context_draw(ctx);
 
             Window::new(&self.drawer.name)
-                .open(&mut true)
+                .open(&mut false)
                 .resizable(false)
                 .show(ctx, |ui| self.widget_draw(ui));
         }
@@ -109,6 +110,7 @@ pub mod sine {
     }
 
     impl Wave for SineModulated {
+        #[inline(always)]
         fn get(&mut self, time: f64) -> Value {
             let modulating_signal = self.sine.get(time).y;
 
@@ -149,7 +151,7 @@ pub mod square {
     impl ContextDraw for Square {
         fn context_draw(&mut self, ctx: &egui::Context) {
             Window::new(&self.drawer.name)
-                .open(&mut false)
+                .open(&mut true)
                 .resizable(false)
                 .show(ctx, |ui| self.widget_draw(ui));
         }
@@ -167,6 +169,7 @@ pub mod square {
     }
 
     impl Wave for Square {
+        #[inline(always)]
         fn get(&mut self, time: f64) -> Value {
             let y = (2. * PI * self.frequency * time).sin();
 
@@ -203,7 +206,7 @@ pub mod square {
             self.square.context_draw(ctx);
 
             Window::new(&self.drawer.name)
-                .open(&mut true)
+                .open(&mut false)
                 .resizable(false)
                 .show(ctx, |ui| self.widget_draw(ui));
         }
@@ -212,8 +215,8 @@ pub mod square {
     impl SquareModulated {
         pub fn new(
             carrier_frequency: f64,
-            delta_frequency: f64,
             modulating_frequency: f64,
+            delta_frequency: f64,
         ) -> Self {
             let drawer = WaveDrawer::new("Square FSK", DRAW_BUFFER_SIZE);
             let square = Square::new(modulating_frequency);
@@ -233,6 +236,7 @@ pub mod square {
     }
 
     impl Wave for SquareModulated {
+        #[inline(always)]
         fn get(&mut self, time: f64) -> Value {
             let y = self.square.get(time).y;
 

@@ -10,12 +10,14 @@ use egui::{Context, Layout, Slider, Visuals};
 use parking_lot::Mutex;
 
 use crate::{
-    consts::{MUTEX_LOCK_EVERY_N_CYCLES, SAMPLE_FREQUENCY},
+    consts::{SAMPLES_PER_CYCLE, SAMPLE_PERIOD, SAMPLE_PERIOD_NS},
     draw::ContextDraw,
+    generators::sine::SineModulated,
     generators::square::SquareModulated,
-    generators::{sine::SineModulated, Wave},
+    generators::Wave,
 };
 
+#[derive(Clone)]
 pub struct SignalApp {
     sine: SineModulated,
     square: SquareModulated,
@@ -25,73 +27,83 @@ pub struct SignalApp {
 
 impl SignalApp {
     pub fn new() -> Self {
-        let sine = SineModulated::new(20_000.0, 1_000.0, 15_000.0);
-        let square = SquareModulated::new(10_000.0, 5_000.0, 500.0);
-        let mut start = Instant::now();
+        let sine = SineModulated::new(100_000.0, 10_000.0, 75_000.0);
+        let square = SquareModulated::new(275_000.0, 10_000.0, 75_000.0);
 
-        let slowdown_factor = Arc::new(Mutex::from(5_000.0));
+        let slowdown_factor = Arc::new(Mutex::from(1000.0));
         let seconds_elapsed = Arc::new(Mutex::from(0.0));
 
-        {
-            let slowdown_factor = Arc::clone(&slowdown_factor);
-            let seconds_elapsed = Arc::clone(&seconds_elapsed);
-
-            let mut sine = sine.clone();
-            let mut square = square.clone();
-            let mut last_known_slowdown_factor = *slowdown_factor.lock();
-
-            let sample_period_ns = ((1.0 / SAMPLE_FREQUENCY) * 1_000_000_000.) as u128;
-
-            let mut iteration_count = 0;
-
-            thread::spawn(move || loop {
-                let loop_start = Instant::now();
-
-                // Don't always try Mutex lock since we are in the hot path
-                if iteration_count == MUTEX_LOCK_EVERY_N_CYCLES {
-                    if let Some(slowdown_factor) = slowdown_factor.try_lock() {
-                        // Cleanup points and reset time if the speed was changed
-                        if last_known_slowdown_factor != *slowdown_factor {
-                            sine.clear();
-                            square.clear();
-                            start = Instant::now();
-                        }
-
-                        last_known_slowdown_factor = *slowdown_factor;
-                    };
-
-                    if let Some(mut seconds_elapsed) = seconds_elapsed.try_lock() {
-                        *seconds_elapsed =
-                            start.elapsed().as_secs_f64() / last_known_slowdown_factor;
-                    }
-
-                    iteration_count = 0;
-                }
-
-                iteration_count += 1;
-
-                let t = start.elapsed().as_secs_f64() / last_known_slowdown_factor;
-                let _ = sine.get(t);
-                let _ = square.get(t);
-
-                let elapsed_ns = loop_start.elapsed().as_nanos();
-
-                if elapsed_ns < sample_period_ns {
-                    let sleep_time = ((sample_period_ns - elapsed_ns) as f64
-                        * last_known_slowdown_factor) as u64;
-                    println!("not zero");
-                    sleep(Duration::from_nanos(sleep_time));
-                } else {
-                    println!("zero {elapsed_ns} {sample_period_ns}");
-                }
-            });
-        }
-
-        SignalApp {
+        let signal_app = SignalApp {
             sine,
             square,
             slowdown_factor,
             seconds_elapsed,
+        };
+
+        {
+            let signal_app = signal_app.clone();
+            thread::spawn(move || Self::signal_generation_thread(signal_app));
+        }
+
+        signal_app
+    }
+
+    fn signal_generation_thread(self) {
+        let mut sine = self.sine.clone();
+        let mut square = self.square.clone();
+        let mut last_known_slowdown_factor = *self.slowdown_factor.lock();
+
+        let mut t = 0.0;
+        let mut latest_instant = Instant::now();
+
+        loop {
+            // Mutex lock is expensive, don't try that every `MUTEX_LOCK_EVERY_N_CYCLES` cycles and rely on cache
+            // the other times
+            if let Some(slowdown_factor) = self.slowdown_factor.try_lock() {
+                // Cleanup points and reset time if the speed was changed
+                if last_known_slowdown_factor != *slowdown_factor {
+                    sine.clear();
+                    square.clear();
+                    t = 0.0;
+                }
+
+                last_known_slowdown_factor = *slowdown_factor;
+            };
+
+            if let Some(mut seconds_elapsed) = self.seconds_elapsed.try_lock() {
+                *seconds_elapsed = t;
+            }
+
+            // Adjust SAMPLES_PER_CYCLE by the slowdown factor so that when the slowdown factor is large, samples
+            // per cycle is low and the signal is nice to see
+            let adjusted_samples_per_cycle =
+                (SAMPLES_PER_CYCLE as f64 / last_known_slowdown_factor).ceil() as u64 * 2;
+
+            for _ in 0..adjusted_samples_per_cycle {
+                let _ = sine.get(t);
+                let _ = square.get(t);
+
+                t += SAMPLE_PERIOD;
+            }
+
+            let now = Instant::now();
+            let took = now - latest_instant;
+
+            let required_sleep_time_ns = (SAMPLE_PERIOD_NS as f64 * last_known_slowdown_factor)
+                as u64
+                * adjusted_samples_per_cycle;
+
+            if (took.as_nanos() as u64) < required_sleep_time_ns {
+                let missing_sleep_time = required_sleep_time_ns - took.as_nanos() as u64;
+                sleep(Duration::from_nanos(missing_sleep_time));
+            } else {
+                println!(
+                    "oh no, loop took too long ({} ns)",
+                    took.as_nanos() as u64 - required_sleep_time_ns
+                );
+            }
+
+            latest_instant += Duration::from_nanos(required_sleep_time_ns);
         }
     }
 }
@@ -120,8 +132,7 @@ impl App for SignalApp {
 
             ui.with_layout(Layout::left_to_right(), |ui| {
                 ui.add(
-                    Slider::new(slowdown_factor.deref_mut(), 100.0..=100_000.0)
-                        .text("Slowdown factor"),
+                    Slider::new(slowdown_factor.deref_mut(), 10.0..=3000.0).text("Slowdown factor"),
                 );
 
                 ui.separator();
