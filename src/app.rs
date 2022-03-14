@@ -42,7 +42,8 @@ impl App for SignalApp {
 
             ui.with_layout(Layout::left_to_right(), |ui| {
                 ui.add(
-                    Slider::new(slowdown_factor.deref_mut(), 10.0..=3000.0).text("Slowdown factor"),
+                    Slider::new(slowdown_factor.deref_mut(), 10.0..=10_000.0)
+                        .text("Slowdown factor"),
                 );
 
                 ui.separator();

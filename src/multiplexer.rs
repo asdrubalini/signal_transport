@@ -4,11 +4,12 @@ use std::{
     time::{Duration, Instant},
 };
 
+use egui::{plot::Value, Window};
 use parking_lot::Mutex;
 
 use crate::{
-    consts::{SAMPLES_PER_CYCLE, SAMPLE_PERIOD, SAMPLE_PERIOD_NS},
-    draw::ContextDraw,
+    consts::{DRAW_BUFFER_SIZE, SAMPLES_PER_CYCLE, SAMPLE_PERIOD, SAMPLE_PERIOD_NS},
+    draw::{ContextDraw, WaveDrawer, WidgetDraw},
     generators::{sine::SineModulated, square::SquareModulated, Wave},
 };
 
@@ -18,13 +19,7 @@ pub struct Multiplexer {
     square: SquareModulated,
     pub slowdown_factor: Arc<Mutex<f64>>,
     pub seconds_elapsed: Arc<Mutex<f64>>,
-}
-
-impl ContextDraw for Multiplexer {
-    fn context_draw(&mut self, ctx: &egui::Context) {
-        self.sine.context_draw(ctx);
-        self.square.context_draw(ctx);
-    }
+    drawer: WaveDrawer,
 }
 
 impl Multiplexer {
@@ -35,11 +30,14 @@ impl Multiplexer {
         let slowdown_factor = Arc::new(Mutex::from(1000.0));
         let seconds_elapsed = Arc::new(Mutex::from(0.0));
 
+        let drawer = WaveDrawer::new("Multiplexed", DRAW_BUFFER_SIZE, 1);
+
         let multiplexer = Multiplexer {
             sine,
             square,
             slowdown_factor,
             seconds_elapsed,
+            drawer,
         };
 
         {
@@ -50,7 +48,7 @@ impl Multiplexer {
         multiplexer
     }
 
-    fn signal_generation_thread(self) {
+    fn signal_generation_thread(mut self) {
         let mut sine = self.sine.clone();
         let mut square = self.square.clone();
         let mut last_known_slowdown_factor = *self.slowdown_factor.lock();
@@ -82,8 +80,7 @@ impl Multiplexer {
                 (SAMPLES_PER_CYCLE as f64 / last_known_slowdown_factor).ceil() as u64 * 2;
 
             for _ in 0..adjusted_samples_per_cycle {
-                let _ = sine.get(t);
-                let _ = square.get(t);
+                let _ = self.get(t);
 
                 t += SAMPLE_PERIOD;
             }
@@ -107,5 +104,36 @@ impl Multiplexer {
 
             latest_instant += Duration::from_nanos(required_sleep_time_ns);
         }
+    }
+}
+
+impl Wave for Multiplexer {
+    #[inline(always)]
+    fn get(&mut self, time: f64) -> Value {
+        let sine = self.sine.get(time);
+        let square = self.square.get(time);
+
+        let y = sine.y + square.y;
+        let sample = Value::new(time, y);
+        self.drawer.sample_insert(sample);
+        sample
+    }
+}
+
+impl ContextDraw for Multiplexer {
+    fn context_draw(&mut self, ctx: &egui::Context) {
+        self.sine.context_draw(ctx);
+        self.square.context_draw(ctx);
+
+        Window::new(&self.drawer.name)
+            .open(&mut true)
+            .resizable(false)
+            .show(ctx, |ui| self.widget_draw(ui));
+    }
+}
+
+impl WidgetDraw for Multiplexer {
+    fn widget_draw(&mut self, ui: &mut egui::Ui) {
+        self.drawer.widget_draw(ui);
     }
 }

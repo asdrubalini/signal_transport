@@ -11,7 +11,7 @@ pub mod sine {
     use egui::{plot::Value, Window};
 
     use crate::{
-        consts::DRAW_BUFFER_SIZE,
+        consts::{DRAW_BUFFER_SIZE, DRAW_EVERY_N_SAMPLES},
         draw::{ContextDraw, WaveDrawer, WidgetDraw},
     };
 
@@ -25,7 +25,7 @@ pub mod sine {
 
     impl Sine {
         pub fn new(frequency: f64) -> Self {
-            let drawer = WaveDrawer::new("Sine", DRAW_BUFFER_SIZE);
+            let drawer = WaveDrawer::new("Sine", DRAW_BUFFER_SIZE, DRAW_EVERY_N_SAMPLES);
             Sine { drawer, frequency }
         }
 
@@ -92,7 +92,7 @@ pub mod sine {
             modulating_frequency: f64,
             delta_frequency: f64,
         ) -> Self {
-            let drawer = WaveDrawer::new("Sine FM", DRAW_BUFFER_SIZE);
+            let drawer = WaveDrawer::new("Sine FM", DRAW_BUFFER_SIZE, DRAW_EVERY_N_SAMPLES);
             let sine = Sine::new(modulating_frequency);
 
             SineModulated {
@@ -130,7 +130,7 @@ pub mod square {
     use egui::{plot::Value, Window};
 
     use crate::{
-        consts::DRAW_BUFFER_SIZE,
+        consts::{DRAW_BUFFER_SIZE, DRAW_EVERY_N_SAMPLES},
         draw::{ContextDraw, WaveDrawer, WidgetDraw},
     };
 
@@ -159,7 +159,7 @@ pub mod square {
 
     impl Square {
         pub fn new(frequency: f64) -> Self {
-            let drawer = WaveDrawer::new("Square", DRAW_BUFFER_SIZE);
+            let drawer = WaveDrawer::new("Square", DRAW_BUFFER_SIZE, DRAW_EVERY_N_SAMPLES);
             Square { drawer, frequency }
         }
 
@@ -218,7 +218,7 @@ pub mod square {
             modulating_frequency: f64,
             delta_frequency: f64,
         ) -> Self {
-            let drawer = WaveDrawer::new("Square FSK", DRAW_BUFFER_SIZE);
+            let drawer = WaveDrawer::new("Square FSK", DRAW_BUFFER_SIZE, DRAW_EVERY_N_SAMPLES);
             let square = Square::new(modulating_frequency);
 
             SquareModulated {
