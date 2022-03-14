@@ -37,8 +37,8 @@ impl App for SignalApp {
         self.multiplexer.context_draw(ctx);
 
         egui::TopBottomPanel::bottom("speed_factor").show(ctx, |ui| {
-            let mut slowdown_factor = self.multiplexer.slowdown_factor.lock();
-            let seconds_elapsed = *self.multiplexer.seconds_elapsed.lock();
+            let mut slowdown_factor = self.multiplexer.slowdown_factor.write();
+            let seconds_elapsed = *self.multiplexer.seconds_elapsed.read();
 
             ui.with_layout(Layout::left_to_right(), |ui| {
                 ui.add(
