@@ -18,6 +18,11 @@ pub trait ContextDraw {
     fn context_draw(&mut self, ctx: &Context);
 }
 
+pub trait Wave {
+    #[must_use]
+    fn get(&mut self, time: f64) -> Value;
+}
+
 #[derive(Debug, Clone)]
 pub struct WaveDrawer {
     pub name: String,

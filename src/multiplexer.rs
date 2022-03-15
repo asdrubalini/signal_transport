@@ -2,14 +2,14 @@ use egui::{plot::Value, Window};
 
 use crate::{
     consts::DRAW_BUFFER_SIZE,
-    draw::{ContextDraw, FrequencyDrawer, WaveDrawer, WidgetDraw},
-    modulators::{sine::SineModulated, square::SquareModulated, Wave},
+    draw::{ContextDraw, FrequencyDrawer, Wave, WaveDrawer, WidgetDraw},
+    modulators::{sine::SineModulated, square::SquareModulated},
 };
 
 #[derive(Clone)]
 pub struct Multiplexer {
-    sine: SineModulated,
-    square: SquareModulated,
+    sine_modulator: SineModulated,
+    square_modulator: SquareModulated,
     samples_drawer: WaveDrawer,
     frequencies_drawer: FrequencyDrawer,
 }
@@ -25,8 +25,8 @@ impl Multiplexer {
             FrequencyDrawer::new("Multiplexed frequencies", DRAW_BUFFER_SIZE * 100);
 
         let multiplexer = Multiplexer {
-            sine,
-            square,
+            sine_modulator: sine,
+            square_modulator: square,
             samples_drawer,
             frequencies_drawer,
         };
@@ -35,8 +35,8 @@ impl Multiplexer {
     }
 
     pub fn clear(&mut self) {
-        self.sine.clear();
-        self.square.clear();
+        self.sine_modulator.clear();
+        self.square_modulator.clear();
         self.samples_drawer.clear();
         self.frequencies_drawer.clear();
     }
@@ -45,8 +45,8 @@ impl Multiplexer {
 impl Wave for Multiplexer {
     #[inline(always)]
     fn get(&mut self, time: f64) -> Value {
-        let sine = self.sine.get(time);
-        let square = self.square.get(time);
+        let sine = self.sine_modulator.get(time);
+        let square = self.square_modulator.get(time);
 
         let y = sine.y + square.y;
         let sample = Value::new(time, y);
@@ -61,8 +61,8 @@ impl Wave for Multiplexer {
 
 impl ContextDraw for Multiplexer {
     fn context_draw(&mut self, ctx: &egui::Context) {
-        self.sine.context_draw(ctx);
-        self.square.context_draw(ctx);
+        self.sine_modulator.context_draw(ctx);
+        self.square_modulator.context_draw(ctx);
 
         Window::new(&self.samples_drawer.name)
             .open(&mut true)

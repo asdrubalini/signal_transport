@@ -1,10 +1,3 @@
-use egui::plot::Value;
-
-pub trait Wave {
-    #[must_use]
-    fn get(&mut self, time: f64) -> Value;
-}
-
 pub mod sine {
     use std::f64::consts::PI;
 
@@ -12,10 +5,8 @@ pub mod sine {
 
     use crate::{
         consts::{DRAW_BUFFER_SIZE, DRAW_EVERY_N_SAMPLES},
-        draw::{ContextDraw, WaveDrawer, WidgetDraw},
+        draw::{ContextDraw, Wave, WaveDrawer, WidgetDraw},
     };
-
-    use super::Wave;
 
     #[derive(Clone)]
     struct Sine {
@@ -131,10 +122,8 @@ pub mod square {
 
     use crate::{
         consts::{DRAW_BUFFER_SIZE, DRAW_EVERY_N_SAMPLES},
-        draw::{ContextDraw, WaveDrawer, WidgetDraw},
+        draw::{ContextDraw, Wave, WaveDrawer, WidgetDraw},
     };
-
-    use super::Wave;
 
     #[derive(Clone)]
     struct Square {

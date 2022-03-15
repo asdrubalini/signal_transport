@@ -1,5 +1,6 @@
 mod app;
 mod consts;
+mod demodulators;
 mod demultiplexer;
 mod draw;
 mod modulators;

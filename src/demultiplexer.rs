@@ -9,8 +9,8 @@ use parking_lot::RwLock;
 
 use crate::{
     consts::{SAMPLES_PER_CYCLE, SAMPLE_PERIOD, SAMPLE_PERIOD_NS},
-    draw::ContextDraw,
-    modulators::Wave,
+    demodulators::square::SquareDemodulator,
+    draw::{ContextDraw, Wave},
     multiplexer::Multiplexer,
 };
 
@@ -19,16 +19,20 @@ pub struct Demultiplexer {
     multiplexer: Multiplexer,
     slowdown_factor: Arc<RwLock<f64>>,
     seconds_elapsed: Arc<RwLock<f64>>,
+    square_demodulator: SquareDemodulator,
 }
 
 impl Demultiplexer {
     pub fn new(slowdown_factor: Arc<RwLock<f64>>, seconds_elapsed: Arc<RwLock<f64>>) -> Self {
         let multiplexer = Multiplexer::new();
 
+        let square_demodulator = SquareDemodulator::new();
+
         let multiplexer = Demultiplexer {
             multiplexer,
             slowdown_factor,
             seconds_elapsed,
+            square_demodulator,
         };
 
         {
@@ -100,19 +104,26 @@ impl Demultiplexer {
 
     pub fn clear(&mut self) {
         self.multiplexer.clear();
+        self.square_demodulator.clear();
     }
 }
 
 impl Wave for Demultiplexer {
     #[inline(always)]
     fn get(&mut self, time: f64) -> Value {
-        self.multiplexer.get(time)
+        let sample = self.multiplexer.get(time);
+
+        self.square_demodulator.sample_insert(sample);
+        let _ = self.square_demodulator.get(time);
+
+        sample
     }
 }
 
 impl ContextDraw for Demultiplexer {
     fn context_draw(&mut self, ctx: &egui::Context) {
         self.multiplexer.context_draw(ctx);
+        self.square_demodulator.context_draw(ctx);
 
         //Window::new(&self.samples_drawer.name)
         //.open(&mut true)
