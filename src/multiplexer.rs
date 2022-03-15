@@ -1,6 +1,6 @@
 use std::{
     sync::Arc,
-    thread::{self, sleep},
+    thread::{self},
     time::{Duration, Instant},
 };
 
@@ -9,7 +9,7 @@ use parking_lot::RwLock;
 
 use crate::{
     consts::{DRAW_BUFFER_SIZE, SAMPLES_PER_CYCLE, SAMPLE_PERIOD, SAMPLE_PERIOD_NS},
-    draw::{ContextDraw, WaveDrawer, WidgetDraw},
+    draw::{ContextDraw, FrequencyDrawer, WaveDrawer, WidgetDraw},
     generators::{sine::SineModulated, square::SquareModulated, Wave},
 };
 
@@ -20,7 +20,7 @@ pub struct Multiplexer {
     pub slowdown_factor: Arc<RwLock<f64>>,
     pub seconds_elapsed: Arc<RwLock<f64>>,
     samples_drawer: WaveDrawer,
-    frequencies_drawer: WaveDrawer,
+    frequencies_drawer: FrequencyDrawer,
 }
 
 impl Multiplexer {
@@ -33,7 +33,7 @@ impl Multiplexer {
 
         let samples_drawer = WaveDrawer::new("Multiplexed", DRAW_BUFFER_SIZE, 1);
         let frequencies_drawer =
-            WaveDrawer::new("Multiplexed frequencies", DRAW_BUFFER_SIZE * 100, 1);
+            FrequencyDrawer::new("Multiplexed frequencies", DRAW_BUFFER_SIZE * 100);
 
         let multiplexer = Multiplexer {
             sine,
@@ -83,6 +83,7 @@ impl Multiplexer {
             let adjusted_samples_per_cycle =
                 (SAMPLES_PER_CYCLE as f64 / last_known_slowdown_factor).ceil() as u64 * 2;
 
+            // Actual signal generation
             for _ in 0..adjusted_samples_per_cycle {
                 let _ = self.get(t);
 
@@ -98,11 +99,11 @@ impl Multiplexer {
 
             if (took.as_nanos() as u64) < required_sleep_time_ns {
                 let missing_sleep_time = required_sleep_time_ns - took.as_nanos() as u64;
-                sleep(Duration::from_nanos(missing_sleep_time));
+                thread::sleep(Duration::from_nanos(missing_sleep_time));
             } else {
                 println!(
                     "oh no, loop took too long ({} ns)",
-                    took.as_micros() as u64 - required_sleep_time_ns
+                    (took.as_nanos() as u64 - required_sleep_time_ns) / 1_000
                 );
             }
 
@@ -127,8 +128,9 @@ impl Wave for Multiplexer {
         let y = sine.y + square.y;
         let sample = Value::new(time, y);
 
-        self.samples_drawer.sample_insert(sample);
-        self.frequencies_drawer.sample_insert(sample);
+        if self.samples_drawer.sample_insert(sample) {
+            self.frequencies_drawer.sample_insert(sample);
+        }
 
         sample
     }
@@ -142,13 +144,11 @@ impl ContextDraw for Multiplexer {
         Window::new(&self.samples_drawer.name)
             .open(&mut true)
             .resizable(false)
-            .show(ctx, |ui| self.widget_draw(ui));
-    }
-}
+            .show(ctx, |ui| self.samples_drawer.widget_draw(ui));
 
-impl WidgetDraw for Multiplexer {
-    fn widget_draw(&mut self, ui: &mut egui::Ui) {
-        self.samples_drawer.widget_draw(ui);
-        self.frequencies_drawer.widget_draw(ui);
+        Window::new(&self.frequencies_drawer.name)
+            .open(&mut false)
+            .resizable(false)
+            .show(ctx, |ui| self.frequencies_drawer.widget_draw(ui));
     }
 }
