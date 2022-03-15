@@ -4,13 +4,13 @@ use std::{
     time::{Duration, Instant},
 };
 
-use egui::{plot::Value, Window};
+use egui::plot::Value;
 use parking_lot::RwLock;
 
 use crate::{
-    consts::{DRAW_BUFFER_SIZE, SAMPLES_PER_CYCLE, SAMPLE_PERIOD, SAMPLE_PERIOD_NS},
-    draw::{ContextDraw, FrequencyDrawer, WaveDrawer, WidgetDraw},
-    generators::Wave,
+    consts::{SAMPLES_PER_CYCLE, SAMPLE_PERIOD, SAMPLE_PERIOD_NS},
+    draw::ContextDraw,
+    modulators::Wave,
     multiplexer::Multiplexer,
 };
 

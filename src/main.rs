@@ -2,7 +2,7 @@ mod app;
 mod consts;
 mod demultiplexer;
 mod draw;
-mod generators;
+mod modulators;
 mod multiplexer;
 mod samples;
 

@@ -3,7 +3,7 @@ use egui::{plot::Value, Window};
 use crate::{
     consts::DRAW_BUFFER_SIZE,
     draw::{ContextDraw, FrequencyDrawer, WaveDrawer, WidgetDraw},
-    generators::{sine::SineModulated, square::SquareModulated, Wave},
+    modulators::{sine::SineModulated, square::SquareModulated, Wave},
 };
 
 #[derive(Clone)]
