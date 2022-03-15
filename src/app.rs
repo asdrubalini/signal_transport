@@ -1,19 +1,35 @@
-use std::ops::DerefMut;
+use std::{ops::DerefMut, sync::Arc};
 
 use eframe::epi::{App, Frame};
 use egui::{Context, Layout, Slider, Visuals};
+use parking_lot::RwLock;
 
-use crate::{draw::ContextDraw, multiplexer::Multiplexer};
+use crate::{demultiplexer::Demultiplexer, draw::ContextDraw};
 
 #[derive(Clone)]
 pub struct SignalApp {
-    multiplexer: Multiplexer,
+    demultiplexer: Demultiplexer,
+    slowdown_factor: Arc<RwLock<f64>>,
+    seconds_elapsed: Arc<RwLock<f64>>,
 }
 
 impl SignalApp {
     pub fn new() -> Self {
-        let multiplexer = Multiplexer::new();
-        let signal_app = SignalApp { multiplexer };
+        let slowdown_factor = Arc::new(RwLock::from(1000.0));
+        let seconds_elapsed = Arc::new(RwLock::from(0.0));
+
+        let demultiplexer = {
+            let slowdown_factor = Arc::clone(&slowdown_factor);
+            let seconds_elapsed = Arc::clone(&seconds_elapsed);
+
+            Demultiplexer::new(slowdown_factor, seconds_elapsed)
+        };
+
+        let signal_app = SignalApp {
+            demultiplexer,
+            slowdown_factor,
+            seconds_elapsed,
+        };
 
         signal_app
     }
@@ -34,11 +50,11 @@ impl App for SignalApp {
     }
 
     fn update(&mut self, ctx: &Context, _frame: &Frame) {
-        self.multiplexer.context_draw(ctx);
+        self.demultiplexer.context_draw(ctx);
 
         egui::TopBottomPanel::bottom("speed_factor").show(ctx, |ui| {
-            let mut slowdown_factor = self.multiplexer.slowdown_factor.write();
-            let seconds_elapsed = *self.multiplexer.seconds_elapsed.read();
+            let mut slowdown_factor = self.slowdown_factor.write();
+            let seconds_elapsed = *self.seconds_elapsed.read();
 
             ui.with_layout(Layout::left_to_right(), |ui| {
                 ui.add(
