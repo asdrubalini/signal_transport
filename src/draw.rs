@@ -43,7 +43,8 @@ impl WidgetDraw for WaveDrawer {
         Plot::new(&self.name)
             .allow_zoom(false)
             .allow_drag(false)
-            .view_aspect(2.0)
+            .height(ui.available_height() / 2.5)
+            .view_aspect(2.5)
             .center_y_axis(true)
             .show(ui, |plot_ui| plot_ui.line(line));
     }

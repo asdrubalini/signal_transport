@@ -3,6 +3,7 @@ mod consts;
 mod demodulators;
 mod demultiplexer;
 mod draw;
+mod filters;
 mod modulators;
 mod multiplexer;
 mod samples;
