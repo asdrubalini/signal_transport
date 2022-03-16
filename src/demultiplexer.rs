@@ -36,8 +36,8 @@ impl Demultiplexer {
         };
 
         {
-            let multiplexer = multiplexer.clone();
-            thread::spawn(move || Self::signal_generation_thread(multiplexer));
+            let demultiplexer = multiplexer.clone();
+            thread::spawn(move || Self::signal_generation_thread(demultiplexer));
         }
 
         multiplexer
@@ -93,7 +93,7 @@ impl Demultiplexer {
                 thread::sleep(Duration::from_nanos(missing_sleep_time));
             } else {
                 println!(
-                    "oh no, loop took too long ({} ns)",
+                    "oh no, loop took too long ({} us)",
                     (took.as_nanos() as u64 - required_sleep_time_ns) / 1_000
                 );
             }

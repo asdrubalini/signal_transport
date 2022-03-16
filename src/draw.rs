@@ -1,4 +1,4 @@
-use std::{sync::Arc, thread};
+use std::{mem::swap, ops::DerefMut, sync::Arc, thread};
 
 use egui::{
     plot::{Line, Plot, Value, Values},
@@ -6,7 +6,7 @@ use egui::{
 };
 use flume::{Receiver, Sender};
 use parking_lot::RwLock;
-use rustfft::{Fft, FftPlanner};
+use rustfft::{num_complex::Complex, Fft, FftPlanner};
 
 use crate::samples::Samples;
 
@@ -99,31 +99,24 @@ impl WaveDrawer {
 pub struct FrequencyDrawer {
     pub name: String,
     samples_tx: Sender<Value>,
-    fft: Arc<dyn Fft<f64>>,
-    spectrum_data: Arc<RwLock<Vec<Value>>>,
+    frequencies_result: Arc<RwLock<Vec<Value>>>,
 }
 
 impl FrequencyDrawer {
     pub fn new(name: &str, buffer_size: u32) -> Self {
-        // TODO: complete this
         let (samples_tx, samples_rx) = flume::unbounded::<Value>();
 
-        let mut planner = FftPlanner::<f64>::new();
-        let fft = planner.plan_fft_forward(buffer_size as usize);
-
-        let spectrum_data = Arc::new(RwLock::new(Vec::new()));
+        let frequencies_result = Arc::new(RwLock::new(Vec::new()));
 
         {
-            let fft = Arc::clone(&fft);
-            let spectrum_data = Arc::clone(&spectrum_data);
-            Self::buffer_sync_thread_start(samples_rx, fft, spectrum_data);
+            let frequencies_result = Arc::clone(&frequencies_result);
+            Self::buffer_sync_thread_start(samples_rx, frequencies_result);
         }
 
         let drawer = FrequencyDrawer {
             name: name.to_string(),
-            fft,
             samples_tx,
-            spectrum_data,
+            frequencies_result,
         };
 
         drawer
@@ -131,12 +124,38 @@ impl FrequencyDrawer {
 
     pub fn buffer_sync_thread_start(
         rx: Receiver<Value>,
-        fft: Arc<dyn Fft<f64>>,
-        spectrum_data: Arc<RwLock<Vec<Value>>>,
+        frequencies_result: Arc<RwLock<Vec<Value>>>,
     ) {
-        thread::spawn(move || loop {
-            while let Ok(sample) = rx.recv() {
-                // samples_buffer.write().insert(sample);
+        thread::spawn(move || {
+            let mut samples_buffer = Vec::new();
+
+            let mut planner = FftPlanner::<f64>::new();
+            let fft = planner.plan_fft_forward(1000);
+
+            // TODO: rewrite this mess
+            loop {
+                while samples_buffer.len() < 1000 {
+                    samples_buffer.push(rx.recv().unwrap());
+                }
+
+                let mut samples = vec![];
+                swap(&mut samples, &mut samples_buffer);
+                let mut samples: Vec<_> = samples
+                    .into_iter()
+                    .map(|sample| Complex {
+                        re: sample.y,
+                        im: 0.0,
+                    })
+                    .collect();
+                fft.process(&mut samples);
+
+                // TODO: put proper frequencies
+                let mut frequencies_result = frequencies_result.write();
+                *frequencies_result = samples
+                    .into_iter()
+                    .enumerate()
+                    .map(|(i, s)| Value::new(i as f64, s.norm_sqr().sqrt()))
+                    .collect();
             }
         });
     }
@@ -148,23 +167,23 @@ impl FrequencyDrawer {
     }
 
     pub fn clear(&mut self) {
-        //self.samples.write().clear();
+        //self.frequencies_result.write().
     }
 }
 
 impl WidgetDraw for FrequencyDrawer {
     fn widget_draw(&mut self, ui: &mut Ui) {
-        //let values = match self.spectrum_data.try_read() {
-        //Some(samples) => Values::from_values(*samples),
-        //None => return,
-        //};
-        //let line = Line::new(values).width(2.);
+        let values = match self.frequencies_result.try_read() {
+            Some(samples) => Values::from_values_iter(samples.iter().map(ToOwned::to_owned)),
+            None => return,
+        };
+        let line = Line::new(values).width(2.);
 
-        //Plot::new(&self.name)
-        //.allow_zoom(false)
-        //.allow_drag(false)
-        //.view_aspect(2.0)
-        //.center_y_axis(true)
-        //.show(ui, |plot_ui| plot_ui.line(line));
+        Plot::new(&self.name)
+            .allow_zoom(false)
+            .allow_drag(false)
+            .view_aspect(2.0)
+            .center_y_axis(true)
+            .show(ui, |plot_ui| plot_ui.line(line));
     }
 }
