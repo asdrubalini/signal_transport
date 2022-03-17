@@ -20,8 +20,8 @@ pub mod square {
     }
 
     impl PutSample for SquareDemodulator {
-        fn put_sample(&mut self, sample: Value) {
-            todo!()
+        fn put_sample(&mut self, _sample: Value) {
+            // TODO
         }
     }
 
