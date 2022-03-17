@@ -21,8 +21,7 @@ impl Multiplexer {
         let square = SquareModulated::new(275_000.0, 10_000.0, 75_000.0);
 
         let samples_drawer = WaveDrawer::new("Multiplexed", DRAW_BUFFER_SIZE, 1);
-        let frequencies_drawer =
-            FrequencyDrawer::new("Multiplexed frequencies", DRAW_BUFFER_SIZE * 100);
+        let frequencies_drawer = FrequencyDrawer::new("Multiplexed frequency spectrum");
 
         let multiplexer = Multiplexer {
             sine_modulator: sine,
@@ -70,7 +69,7 @@ impl ContextDraw for Multiplexer {
             .show(ctx, |ui| self.samples_drawer.widget_draw(ui));
 
         Window::new(&self.frequencies_drawer.name)
-            .open(&mut false)
+            .open(&mut true)
             .resizable(false)
             .show(ctx, |ui| self.frequencies_drawer.widget_draw(ui));
     }

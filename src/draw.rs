@@ -1,4 +1,4 @@
-use std::{mem::swap, ops::DerefMut, sync::Arc, thread};
+use std::{sync::Arc, thread};
 
 use egui::{
     plot::{Line, Plot, Value, Values},
@@ -6,9 +6,15 @@ use egui::{
 };
 use flume::{Receiver, Sender};
 use parking_lot::RwLock;
-use rustfft::{num_complex::Complex, Fft, FftPlanner};
+use rustfft::{
+    num_complex::{Complex, Complex64},
+    FftPlanner,
+};
 
-use crate::samples::Samples;
+use crate::{
+    consts::{FFT_WINDOW_SIZE, SAMPLE_FREQUENCY},
+    samples::Samples,
+};
 
 pub trait WidgetDraw {
     fn widget_draw(&mut self, ui: &mut Ui);
@@ -103,7 +109,7 @@ pub struct FrequencyDrawer {
 }
 
 impl FrequencyDrawer {
-    pub fn new(name: &str, buffer_size: u32) -> Self {
+    pub fn new(name: &str) -> Self {
         let (samples_tx, samples_rx) = flume::unbounded::<Value>();
 
         let frequencies_result = Arc::new(RwLock::new(Vec::new()));
@@ -127,47 +133,50 @@ impl FrequencyDrawer {
         frequencies_result: Arc<RwLock<Vec<Value>>>,
     ) {
         thread::spawn(move || {
-            let mut samples_buffer = Vec::new();
+            let mut samples_buffer = Vec::with_capacity(FFT_WINDOW_SIZE as usize);
 
             let mut planner = FftPlanner::<f64>::new();
-            let fft = planner.plan_fft_forward(1000);
+            let fft = planner.plan_fft_forward(FFT_WINDOW_SIZE as usize);
 
-            // TODO: rewrite this mess
             loop {
-                while samples_buffer.len() < 1000 {
+                while samples_buffer.len() < FFT_WINDOW_SIZE as usize {
                     samples_buffer.push(rx.recv().unwrap());
                 }
 
-                let mut samples = vec![];
-                swap(&mut samples, &mut samples_buffer);
-                let mut samples: Vec<_> = samples
-                    .into_iter()
+                let mut samples: Vec<Complex64> = samples_buffer
+                    .drain(0..samples_buffer.len())
                     .map(|sample| Complex {
                         re: sample.y,
                         im: 0.0,
                     })
                     .collect();
+
                 fft.process(&mut samples);
 
-                // TODO: put proper frequencies
                 let mut frequencies_result = frequencies_result.write();
                 *frequencies_result = samples
                     .into_iter()
                     .enumerate()
-                    .map(|(i, s)| Value::new(i as f64, s.norm_sqr().sqrt()))
+                    .map(|(i, s)| {
+                        Value::new(
+                            // TODO: figure out how this works
+                            (i as u64 * SAMPLE_FREQUENCY / FFT_WINDOW_SIZE / 2) as f64, // compute frequency
+                            s.norm_sqr().sqrt(),
+                        )
+                    })
                     .collect();
             }
         });
     }
 
     #[inline(always)]
-    // TODO: consider inserting a SampleInsert Trait
-    pub fn sample_insert(&mut self, sample: Value) {
+    pub fn sample_insert(&mut self, sample: Value) -> bool {
         self.samples_tx.send(sample).unwrap();
+        true
     }
 
     pub fn clear(&mut self) {
-        //self.frequencies_result.write().
+        self.frequencies_result.write().clear();
     }
 }
 
@@ -182,7 +191,8 @@ impl WidgetDraw for FrequencyDrawer {
         Plot::new(&self.name)
             .allow_zoom(false)
             .allow_drag(false)
-            .view_aspect(2.0)
+            .height(ui.available_height() / 2.5)
+            .view_aspect(2.5)
             .center_y_axis(true)
             .show(ui, |plot_ui| plot_ui.line(line));
     }
