@@ -4,7 +4,7 @@
 
 \graphicspath{ {./images/} }
 
-\title{Simulazione software della trasmissione simultanea di quattro segnali utilizzando la tecnica FDM}
+\title{Simulazione della trasmissione simultanea di quattro segnali su un'unica linea utilizzando la tecnica FDM}
 \author{Lena Giovanni Leonardo}
 \date{Marzo 2022}
 
@@ -16,9 +16,9 @@
 Lo scopo del progetto è la realizzazione di una simulazione software per la trasmissione di quattro segnali (due digitali
 e due analogici) mediante lo stesso mezzo utilizzando la tecnica del frequency-division multiplexing (o FDM).\\
 I quattro segnali hanno la stessa frequenza e prima di essere trasmessi vengono modulati, ciascuno con una frequenza
-portante differente in modo da non avere sovrapposizioni di banda. Inoltre, tra un segnale e l'altro è prevista una
+portante diversa in modo da non avere sovrapposizioni di banda. Inoltre, tra un segnale e l'altro è prevista una
 banda di guardia per evitare ulteriormente le interferenze tra un segnale e l'altro.\\
-Ad ogni stadio è inoltre possibile visualizzare interattivamente ed in tempo reale i segnali, in modo da poterne capire
+Ad ogni stadio è inoltre possibile visualizzare interattivamente ed in tempo reale i segnali, in modo da poterne comprendere
 meglio il funzionamento. Viene inoltre mostrato lo spettro del segnale multiplexato, ottenuto applicando un algoritmo di
 Fast Fourier Transform (FFT) ed è possibile introdurre un segnale di disturbo per osservare gli effetti sui segnali demodulati
 finali.\\
@@ -32,6 +32,17 @@ per l'interfaccia grafica si chiama egui, tutti gli algoritmi per la generazione
 implementati con gli strumenti matematici che offre il linguaggio, fatta eccezione per l'algoritmo di Fast Fourier Transform,
 utilizzato per fini grafici, che viene dalla libreria rustfft.
 
+\section{Cenni teorici}
+\subsection{Frequency-division multiplexing}
+La tecnica della multiplazione a divisione di frequenza (in breve FDM) consiste nella suddivisione della banda totale disponibile
+in una serie di bande più piccole e non sovrapposte tra loro, nelle quali ogni segnale può essere trasmesso indipendentemente
+dagli altri e allo stesso tempo.\\
+Questa tecnica si differenzia da altre tecniche come TDM che invece si basano sulla divisione del tempo, assegnando quindi
+ad ogni segnale una finestra temporale ed alternando continuamente tra di esse.\\
+Esempi comuni di FDM si trovano all'interno della trasmissione televisiva e radiofonica, in cui frequenze diverse vengono
+trasmesse tutte allo stesso tempo. La selezione del canale, infatti, avviene sintonizzandosi su una specifica frequenza.
+Ciò consente la trasmissione di una grossa quantità di dati simultaneamente, senza sprechi di banda.
+
 \section{I segnali generati}
 La frequenza di campionamento della simulazione è di $2.5 MHz$, che corrisponde ad un periodo di $400 ns$. Secondo il teorema
 del campionamento di Nyquist-Shannon, è sufficiente che la frequenza di campionamento sia il doppio della frequenza massima
@@ -39,7 +50,8 @@ che si intende campionare.\\
 All'interno della simulazione, si raggiungono frequenze ben inferiori alla metà della frequenza di campionamento, tuttavia
 per essere sicuri del corretto funzionamento, è stata scelta una frequenza superiore. Dato il periodo molto ristretto ($400 ns$),
 non è computazionalmente possibile eseguire l'algoritmo in tempo reale. Oltre alla generazione dei segnali, infatti, ogni
-sample viene sottoposto a vari algoritmi che verranno approfonditi successivamente.
+sample viene sottoposto a vari algoritmi per la visualizzazione, modulazione e demodulazione che verranno approfonditi
+successivamente.
 
 \begin{itemize}
     \item Onda sinusoidale a 20 kHz
