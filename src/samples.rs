@@ -2,6 +2,8 @@ use std::collections::VecDeque;
 
 use egui::plot::{Value, Values};
 
+use crate::traits::Clear;
+
 #[derive(Debug)]
 pub struct Samples {
     max_samples: u32,
@@ -23,8 +25,10 @@ impl Samples {
 
         self.inner.push_back(sample);
     }
+}
 
-    pub fn clear(&mut self) {
+impl Clear for Samples {
+    fn clear(&mut self) {
         self.inner.clear();
     }
 }

@@ -7,6 +7,8 @@ mod filters;
 mod modulators;
 mod multiplexer;
 mod samples;
+mod state;
+mod traits;
 
 use app::SignalApp;
 use eframe::NativeOptions;

@@ -6,6 +6,7 @@ pub mod sine {
     use crate::{
         consts::{DRAW_BUFFER_SIZE, DRAW_EVERY_N_SAMPLES},
         draw::{ContextDraw, Wave, WaveDrawer, WidgetDraw},
+        traits::Clear,
     };
 
     #[derive(Clone)]
@@ -19,8 +20,10 @@ pub mod sine {
             let drawer = WaveDrawer::new("Sine", DRAW_BUFFER_SIZE, DRAW_EVERY_N_SAMPLES);
             Sine { drawer, frequency }
         }
+    }
 
-        pub fn clear(&mut self) {
+    impl Clear for Sine {
+        fn clear(&mut self) {
             self.drawer.clear();
         }
     }
@@ -55,25 +58,13 @@ pub mod sine {
     #[derive(Clone)]
     pub struct SineModulated {
         sine: Sine,
-        drawer: WaveDrawer,
         carrier_frequency: f64,
         delta_frequency: f64,
-    }
-
-    impl WidgetDraw for SineModulated {
-        fn widget_draw(&mut self, ui: &mut egui::Ui) {
-            self.drawer.widget_draw(ui);
-        }
     }
 
     impl ContextDraw for SineModulated {
         fn context_draw(&mut self, ctx: &egui::Context) {
             self.sine.context_draw(ctx);
-
-            Window::new(&self.drawer.name)
-                .open(&mut false)
-                .resizable(false)
-                .show(ctx, |ui| self.widget_draw(ui));
         }
     }
 
@@ -83,19 +74,18 @@ pub mod sine {
             modulating_frequency: f64,
             delta_frequency: f64,
         ) -> Self {
-            let drawer = WaveDrawer::new("Sine FM", DRAW_BUFFER_SIZE, DRAW_EVERY_N_SAMPLES);
             let sine = Sine::new(modulating_frequency);
 
             SineModulated {
                 sine,
-                drawer,
                 carrier_frequency,
                 delta_frequency,
             }
         }
+    }
 
-        pub fn clear(&mut self) {
-            self.drawer.clear();
+    impl Clear for SineModulated {
+        fn clear(&mut self) {
             self.sine.clear();
         }
     }
@@ -109,7 +99,6 @@ pub mod sine {
                 + (self.delta_frequency / self.sine.frequency) * modulating_signal)
                 .cos();
             let sample = Value::new(time, y);
-            self.drawer.sample_insert(sample);
             sample
         }
     }
@@ -123,6 +112,7 @@ pub mod square {
     use crate::{
         consts::{DRAW_BUFFER_SIZE, DRAW_EVERY_N_SAMPLES},
         draw::{ContextDraw, Wave, WaveDrawer, WidgetDraw},
+        traits::Clear,
     };
 
     #[derive(Clone)]
@@ -151,8 +141,10 @@ pub mod square {
             let drawer = WaveDrawer::new("Square", DRAW_BUFFER_SIZE, DRAW_EVERY_N_SAMPLES);
             Square { drawer, frequency }
         }
+    }
 
-        pub fn clear(&mut self) {
+    impl Clear for Square {
+        fn clear(&mut self) {
             self.drawer.clear();
         }
     }
@@ -179,25 +171,13 @@ pub mod square {
     #[derive(Clone)]
     pub struct SquareModulated {
         square: Square,
-        drawer: WaveDrawer,
         carrier_frequency: f64,
         delta_frequency: f64,
-    }
-
-    impl WidgetDraw for SquareModulated {
-        fn widget_draw(&mut self, ui: &mut egui::Ui) {
-            self.drawer.widget_draw(ui);
-        }
     }
 
     impl ContextDraw for SquareModulated {
         fn context_draw(&mut self, ctx: &egui::Context) {
             self.square.context_draw(ctx);
-
-            Window::new(&self.drawer.name)
-                .open(&mut false)
-                .resizable(false)
-                .show(ctx, |ui| self.widget_draw(ui));
         }
     }
 
@@ -207,19 +187,18 @@ pub mod square {
             modulating_frequency: f64,
             delta_frequency: f64,
         ) -> Self {
-            let drawer = WaveDrawer::new("Square FSK", DRAW_BUFFER_SIZE, DRAW_EVERY_N_SAMPLES);
             let square = Square::new(modulating_frequency);
 
             SquareModulated {
                 square,
-                drawer,
                 carrier_frequency,
                 delta_frequency,
             }
         }
+    }
 
-        pub fn clear(&mut self) {
-            self.drawer.clear();
+    impl Clear for SquareModulated {
+        fn clear(&mut self) {
             self.square.clear();
         }
     }
@@ -238,7 +217,6 @@ pub mod square {
             let y = (2. * PI * current_frequency * time).sin();
 
             let sample = Value::new(time, y);
-            self.drawer.sample_insert(sample);
             sample
         }
     }

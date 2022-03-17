@@ -14,6 +14,7 @@ use rustfft::{
 use crate::{
     consts::{FFT_WINDOW_SIZE, SAMPLE_FREQUENCY},
     samples::Samples,
+    traits::Clear,
 };
 
 pub trait WidgetDraw {
@@ -95,8 +96,10 @@ impl WaveDrawer {
         self.draw_counter += 1;
         inserted
     }
+}
 
-    pub fn clear(&mut self) {
+impl Clear for WaveDrawer {
+    fn clear(&mut self) {
         self.samples_buffer.write().clear();
     }
 }
@@ -174,8 +177,10 @@ impl FrequencyDrawer {
         self.samples_tx.send(sample).unwrap();
         true
     }
+}
 
-    pub fn clear(&mut self) {
+impl Clear for FrequencyDrawer {
+    fn clear(&mut self) {
         self.frequencies_result.write().clear();
     }
 }

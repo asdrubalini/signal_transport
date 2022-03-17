@@ -4,11 +4,11 @@ use eframe::epi::{App, Frame};
 use egui::{Context, Layout, Slider, Visuals};
 use parking_lot::RwLock;
 
-use crate::{demultiplexer::Demultiplexer, draw::ContextDraw};
+use crate::{draw::ContextDraw, state::State};
 
 #[derive(Clone)]
 pub struct SignalApp {
-    demultiplexer: Demultiplexer,
+    state: State,
     slowdown_factor: Arc<RwLock<f64>>,
     seconds_elapsed: Arc<RwLock<f64>>,
 }
@@ -18,15 +18,15 @@ impl SignalApp {
         let slowdown_factor = Arc::new(RwLock::from(1000.0));
         let seconds_elapsed = Arc::new(RwLock::from(0.0));
 
-        let demultiplexer = {
+        let state = {
             let slowdown_factor = Arc::clone(&slowdown_factor);
             let seconds_elapsed = Arc::clone(&seconds_elapsed);
 
-            Demultiplexer::new(slowdown_factor, seconds_elapsed)
+            State::new(slowdown_factor, seconds_elapsed)
         };
 
         let signal_app = SignalApp {
-            demultiplexer,
+            state,
             slowdown_factor,
             seconds_elapsed,
         };
@@ -50,7 +50,7 @@ impl App for SignalApp {
     }
 
     fn update(&mut self, ctx: &Context, _frame: &Frame) {
-        self.demultiplexer.context_draw(ctx);
+        self.state.context_draw(ctx);
 
         egui::TopBottomPanel::bottom("speed_factor").show(ctx, |ui| {
             let mut slowdown_factor = self.slowdown_factor.write();

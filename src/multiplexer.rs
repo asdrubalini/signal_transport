@@ -4,6 +4,7 @@ use crate::{
     consts::DRAW_BUFFER_SIZE,
     draw::{ContextDraw, FrequencyDrawer, Wave, WaveDrawer, WidgetDraw},
     modulators::{sine::SineModulated, square::SquareModulated},
+    traits::Clear,
 };
 
 #[derive(Clone)]
@@ -32,8 +33,10 @@ impl Multiplexer {
 
         multiplexer
     }
+}
 
-    pub fn clear(&mut self) {
+impl Clear for Multiplexer {
+    fn clear(&mut self) {
         self.sine_modulator.clear();
         self.square_modulator.clear();
         self.samples_drawer.clear();

@@ -1,5 +1,6 @@
 \documentclass{article}
 \usepackage{graphicx}
+\usepackage{hyperref}
 \usepackage[utf8]{inputenc}
 
 \graphicspath{ {./images/} }
@@ -14,23 +15,23 @@
 
 \section{Scopo del progetto}
 Lo scopo del progetto è la realizzazione di una simulazione software per la trasmissione di quattro segnali (due digitali
-e due analogici) mediante lo stesso mezzo utilizzando la tecnica del frequency-division multiplexing (o FDM).\\
+e due analogici) mediante lo stesso mezzo utilizzando la tecnica del frequency-division multiplexing (o FDM) \cite{fdm}.\\
 I quattro segnali hanno la stessa frequenza e prima di essere trasmessi vengono modulati, ciascuno con una frequenza
 portante diversa in modo da non avere sovrapposizioni di banda. Inoltre, tra un segnale e l'altro è prevista una
 banda di guardia per evitare ulteriormente le interferenze tra un segnale e l'altro.\\
 Ad ogni stadio è inoltre possibile visualizzare interattivamente ed in tempo reale i segnali, in modo da poterne comprendere
 meglio il funzionamento. Viene inoltre mostrato lo spettro del segnale multiplexato, ottenuto applicando un algoritmo di
-Fast Fourier Transform (FFT) ed è possibile introdurre un segnale di disturbo per osservare gli effetti sui segnali demodulati
+Fast Fourier Transform (FFT) \cite{fft} ed è possibile introdurre un segnale di disturbo per osservare gli effetti sui segnali demodulati
 finali.\\
 È infine presente un controllo che permette di rallentare il tempo per osservare meglio la generazione, modulazione e demodulazione
 dei segnali. Per questioni di performance, la simulazione inizia con l'andamento del tempo rallentato di 10 volte.
 
 \section{Strumenti utilizzati}
-La simulazione è interamente programmata nel linguaggio di programmazione Rust, principalmente per le velocità che
+La simulazione è interamente programmata nel linguaggio di programmazione Rust \cite{rust}, principalmente per le velocità che
 permette di raggiungere e che non sono comparabili a nessun linguaggio di scripting interpretato come Python. La libreria
-per l'interfaccia grafica si chiama egui, tutti gli algoritmi per la generazione delle onde e per il filtro sono stati
+per l'interfaccia grafica si chiama egui \cite{egui}, tutti gli algoritmi per la generazione delle onde e per il filtro sono stati
 implementati con gli strumenti matematici che offre il linguaggio, fatta eccezione per l'algoritmo di Fast Fourier Transform,
-utilizzato per fini grafici, che viene dalla libreria rustfft.
+utilizzato per fini grafici, che viene dalla libreria rustfft \cite{rustfft}.
 
 \section{Cenni teorici}
 \subsection{Frequency-division multiplexing}
@@ -146,6 +147,30 @@ l'intensità di una singola frequenza. Applicando l'algoritmo due volte, una per
 intensità per determinare la maggiore, è semplice stabilire quale dei due bit sta essendo trasmesso ad ogni istante.
 
 \subsection{Demodulazione AM}
+
+
+
+
+\section{Sviluppi futuri}
+
+
+
+\begin{thebibliography}{9}
+    \bibitem{egui}
+    \href{https://github.com/emilk/egui}{egui: an easy-to-use immediate mode GUI in Rust that runs on both web and native}
+
+    \bibitem{fdm}
+    \href{https://en.wikipedia.org/wiki/Frequency-division_multiplexing}{Frequency-division multiplexing}
+
+    \bibitem{fft}
+    \href{https://en.wikipedia.org/wiki/Fast_Fourier_transform}{Fast Fourier Transform}
+
+    \bibitem{rust}
+    \href{https://rust-lang.org}{Rust}
+
+    \bibitem{rustfft}
+    \href{https://docs.rs/rustfft/latest/rustfft/}{RustFFT is a high-performance FFT library written in pure Rust.}
+\end{thebibliography}
 
 
 \end{document}

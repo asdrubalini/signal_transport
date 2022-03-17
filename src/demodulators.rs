@@ -4,6 +4,7 @@ pub mod square {
     use crate::{
         consts::DRAW_BUFFER_SIZE,
         draw::{ContextDraw, Wave, WaveDrawer, WidgetDraw},
+        traits::Clear,
     };
 
     #[derive(Clone)]
@@ -17,12 +18,14 @@ pub mod square {
             SquareDemodulator { drawer }
         }
 
-        pub fn clear(&mut self) {
-            self.drawer.clear();
-        }
-
         pub fn sample_insert(&mut self, sample: Value) -> bool {
             self.drawer.sample_insert(sample)
+        }
+    }
+
+    impl Clear for SquareDemodulator {
+        fn clear(&mut self) {
+            self.drawer.clear();
         }
     }
 
