@@ -69,12 +69,56 @@ In alcune modulazioni (ad esempio FM), la banda teorica risultante è infinita. 
 quale ricadono il 98\% delle frequenze è comunque limitata, tuttavia per una modulazione migliore è possibile applicare un filtro
 passa banda al segnale prima che esso venga unito agli altri per la trasmissione su un unico mezzo.\\
 
-Le modulazioni progettate per i segnali trasmessi sono riportate:
+Le modulazioni progettate per i segnali trasmessi sono riportate di seguito:
 
 \subsection{1. Onda sinusoidale modulata in FM}
+\begin{equation}
+    f_m = 20 kHz
+\end{equation}
+
+\begin{equation}
+    \Delta f = 75 \hspace{0.1cm} kHz
+\end{equation}
+
+\begin{equation}
+    B = 2 \cdot (f_m + \Delta f) = 190 kHz
+\end{equation}
+
 \subsection{2. Onda quadra modulata in FSK}
+\begin{equation}
+    f_m = 20 kHz
+\end{equation}
+
+\begin{equation}
+    \Delta f = 75 \hspace{0.1cm} kHz
+\end{equation}
+
+\begin{equation}
+    B = 2 \cdot (\Delta f + f_m) = 190 kHz
+\end{equation}
+
 \subsection{3. Onda a dente di sega modulata in AM}
+\begin{equation}
+    f_m = 20 kHz
+\end{equation}
+
+\begin{equation}
+    B = 2 \cdot f_m = 40 kHz
+\end{equation}
+
 \subsection{4. Onda quadra modulata in OOK}
+\begin{equation}
+    f_m = 20 kHz
+\end{equation}
+
+\begin{equation}
+    B = 6 \cdot f_m = 120 kHz
+\end{equation}
+
+\begin{center}
+    \includegraphics[width=\textwidth]{bandwidth.png}
+\end{center}
+Lo spettro finale, ottenuto dal calcolo delle bande e lasciando 15 kHz come bande di guardia.
 
 \section{Unione dei segnali con un multiplexer FDM}
 Una volta che i segnali sono stati generati e modulati con delle portanti adeguatamente dimensionate, la trasmissione in FDM

@@ -24,18 +24,19 @@ f_min = fc - df = 350 kHz
 
 ## 3. 20 kHz Sawtooth wave modulated with AM
 ```
-fm = 10 kHz
+fm = 20 kHz
 fc = 385 kHz
-B = 2 * fm = 20 kHz
-f_max = fc + fm = 395 kHz
-f_min = fc - fm = 375 kHz
+B = 2 * fm = 40 kHz
+f_max = fc + fm = 405 kHz
+f_min = fc - fm = 365 kHz
 ```
 
 ## 4. 20 kHz Square wave OOK
 ```
 fm = 20 kHz
-fc = 440 kHz
+fc = 480 kHz
 B = 6 * fm = 120 kHz
-f_max = fc + fm = 450 kHz
-f_min = fc - fm = 430 kHz
+f_max = fc + fm = 540 kHz
+f_min = fc - fm = 420 kHz
 ```
+
