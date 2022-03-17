@@ -2,20 +2,22 @@
 
 ## 1. 20 kHz Sine wave modulated with FM
 ```
-fm = 10 kHz
-fc = 100 kHz
+fm = 20 kHz
+fc = 110 kHz
 df = 75 kHz
-B = 2 * (fm + df) = 170 kHz
-f_max = fc + df = 175 kHz
-f_min = fc + df = 25 kHz
+B = 2 * (fm + df) = 190 kHz
+f_max = fc + df = 185 kHz
+f_min = fc - df = 35 kHz
 ```
 
 ## 2. 20 kHz Square wave modulated with FSK
 ```
-fm = 10 kHz
+fm = 20 kHz
 fc = 275 kHz
 df = 75 kHz
-B = 2 * (fm + df) = 170 kHz
+f1 = fc + df = 
+f2 = fc - df = 
+B = 2 * df + 2 * fm = 190 kHz
 f_max = fc + df = 200 kHz
 f_min = fc - df = 350 kHz
 ```
@@ -31,9 +33,9 @@ f_min = fc - fm = 375 kHz
 
 ## 4. 20 kHz Square wave OOK
 ```
-fm = 10 kHz
+fm = 20 kHz
 fc = 440 kHz
-B = 2 * fm = 20 kHz
+B = 6 * fm = 120 kHz
 f_max = fc + fm = 450 kHz
 f_min = fc - fm = 430 kHz
 ```
