@@ -2,7 +2,7 @@ use egui::{plot::Value, Window};
 
 use crate::{
     consts::DRAW_BUFFER_SIZE,
-    draw::{ContextDraw, FrequencyDrawer, Wave, WaveDrawer, WidgetDraw},
+    draw::{ContextDraw, FrequencyDrawer, GetSample, WaveDrawer, WidgetDraw},
     modulators::{sine::SineModulated, square::SquareModulated},
     traits::Clear,
 };
@@ -44,11 +44,11 @@ impl Clear for Multiplexer {
     }
 }
 
-impl Wave for Multiplexer {
+impl GetSample for Multiplexer {
     #[inline(always)]
-    fn get(&mut self, time: f64) -> Value {
-        let sine = self.sine_modulator.get(time);
-        let square = self.square_modulator.get(time);
+    fn get_sample(&mut self, time: f64) -> Value {
+        let sine = self.sine_modulator.get_sample(time);
+        let square = self.square_modulator.get_sample(time);
 
         let y = sine.y + square.y;
         let sample = Value::new(time, y);

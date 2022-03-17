@@ -5,7 +5,7 @@ pub mod sine {
 
     use crate::{
         consts::{DRAW_BUFFER_SIZE, DRAW_EVERY_N_SAMPLES},
-        draw::{ContextDraw, Wave, WaveDrawer, WidgetDraw},
+        draw::{ContextDraw, GetSample, WaveDrawer, WidgetDraw},
         traits::Clear,
     };
 
@@ -28,9 +28,9 @@ pub mod sine {
         }
     }
 
-    impl Wave for Sine {
+    impl GetSample for Sine {
         #[inline(always)]
-        fn get(&mut self, time: f64) -> Value {
+        fn get_sample(&mut self, time: f64) -> Value {
             let y = (2. * PI * self.frequency * time).sin();
             let sample = Value::new(time, y);
             self.drawer.sample_insert(sample);
@@ -90,10 +90,10 @@ pub mod sine {
         }
     }
 
-    impl Wave for SineModulated {
+    impl GetSample for SineModulated {
         #[inline(always)]
-        fn get(&mut self, time: f64) -> Value {
-            let modulating_signal = self.sine.get(time).y;
+        fn get_sample(&mut self, time: f64) -> Value {
+            let modulating_signal = self.sine.get_sample(time).y;
 
             let y = (2. * PI * self.carrier_frequency * time
                 + (self.delta_frequency / self.sine.frequency) * modulating_signal)
@@ -111,7 +111,7 @@ pub mod square {
 
     use crate::{
         consts::{DRAW_BUFFER_SIZE, DRAW_EVERY_N_SAMPLES},
-        draw::{ContextDraw, Wave, WaveDrawer, WidgetDraw},
+        draw::{ContextDraw, GetSample, WaveDrawer, WidgetDraw},
         traits::Clear,
     };
 
@@ -149,9 +149,9 @@ pub mod square {
         }
     }
 
-    impl Wave for Square {
+    impl GetSample for Square {
         #[inline(always)]
-        fn get(&mut self, time: f64) -> Value {
+        fn get_sample(&mut self, time: f64) -> Value {
             let y = (2. * PI * self.frequency * time).sin();
 
             let y: i8 = if y > 0.0 {
@@ -203,10 +203,10 @@ pub mod square {
         }
     }
 
-    impl Wave for SquareModulated {
+    impl GetSample for SquareModulated {
         #[inline(always)]
-        fn get(&mut self, time: f64) -> Value {
-            let y = self.square.get(time).y;
+        fn get_sample(&mut self, time: f64) -> Value {
+            let y = self.square.get_sample(time).y;
 
             let current_frequency = if y >= 0.0 {
                 self.carrier_frequency + self.delta_frequency

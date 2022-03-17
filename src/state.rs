@@ -10,7 +10,7 @@ use parking_lot::RwLock;
 use crate::{
     consts::{SAMPLES_PER_CYCLE, SAMPLE_PERIOD, SAMPLE_PERIOD_NS},
     demultiplexer::Demultiplexer,
-    draw::{ContextDraw, Wave},
+    draw::{ContextDraw, GetSample, PutSample},
     multiplexer::Multiplexer,
     traits::Clear,
 };
@@ -76,8 +76,8 @@ impl State {
 
             // Actual signal generation
             for _ in 0..adjusted_samples_per_cycle {
-                let multiplexed = self.get(t);
-                self.demultiplexer.propagate_sample(multiplexed);
+                let multiplexed = self.get_sample(t);
+                self.demultiplexer.put_sample(multiplexed);
 
                 t += SAMPLE_PERIOD;
             }
@@ -104,10 +104,10 @@ impl State {
     }
 }
 
-impl Wave for State {
+impl GetSample for State {
     #[inline(always)]
-    fn get(&mut self, time: f64) -> Value {
-        self.multiplexer.get(time)
+    fn get_sample(&mut self, time: f64) -> Value {
+        self.multiplexer.get_sample(time)
     }
 }
 
@@ -120,6 +120,7 @@ impl ContextDraw for State {
 
 impl Clear for State {
     fn clear(&mut self) {
-        todo!()
+        self.multiplexer.clear();
+        self.demultiplexer.clear();
     }
 }

@@ -25,9 +25,13 @@ pub trait ContextDraw {
     fn context_draw(&mut self, ctx: &Context);
 }
 
-pub trait Wave {
+pub trait GetSample {
     #[must_use]
-    fn get(&mut self, time: f64) -> Value;
+    fn get_sample(&mut self, time: f64) -> Value;
+}
+
+pub trait PutSample {
+    fn put_sample(&mut self, sample: Value);
 }
 
 #[derive(Debug, Clone)]

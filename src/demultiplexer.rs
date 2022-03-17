@@ -1,6 +1,10 @@
 use egui::plot::Value;
 
-use crate::{demodulators::square::SquareDemodulator, draw::ContextDraw, traits::Clear};
+use crate::{
+    demodulators::square::SquareDemodulator,
+    draw::{ContextDraw, PutSample},
+    traits::Clear,
+};
 
 #[derive(Clone)]
 pub struct Demultiplexer {
@@ -13,8 +17,12 @@ impl Demultiplexer {
         let multiplexer = Demultiplexer { square_demodulator };
         multiplexer
     }
+}
 
-    pub fn propagate_sample(&self, _sample: Value) {}
+impl PutSample for Demultiplexer {
+    fn put_sample(&mut self, sample: Value) {
+        self.square_demodulator.put_sample(sample);
+    }
 }
 
 impl Clear for Demultiplexer {

@@ -3,7 +3,7 @@ pub mod square {
 
     use crate::{
         consts::DRAW_BUFFER_SIZE,
-        draw::{ContextDraw, Wave, WaveDrawer, WidgetDraw},
+        draw::{ContextDraw, PutSample, WaveDrawer, WidgetDraw},
         traits::Clear,
     };
 
@@ -17,24 +17,17 @@ pub mod square {
             let drawer = WaveDrawer::new("Square demodulated", DRAW_BUFFER_SIZE, 1);
             SquareDemodulator { drawer }
         }
+    }
 
-        pub fn sample_insert(&mut self, sample: Value) -> bool {
-            self.drawer.sample_insert(sample)
+    impl PutSample for SquareDemodulator {
+        fn put_sample(&mut self, sample: Value) {
+            todo!()
         }
     }
 
     impl Clear for SquareDemodulator {
         fn clear(&mut self) {
             self.drawer.clear();
-        }
-    }
-
-    impl Wave for SquareDemodulator {
-        #[inline(always)]
-        fn get(&mut self, time: f64) -> Value {
-            let y = 0;
-            let sample = Value::new(time, y);
-            sample
         }
     }
 
