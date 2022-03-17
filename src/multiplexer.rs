@@ -19,8 +19,8 @@ pub struct Multiplexer {
 impl Multiplexer {
     pub fn new() -> Self {
         // Signals generator
-        let sine = SineModulated::new(100_000.0, 10_000.0, 75_000.0);
-        let square = SquareModulated::new(275_000.0, 10_000.0, 75_000.0);
+        let sine = SineModulated::new(100_000.0, 20_000.0, 75_000.0);
+        let square = SquareModulated::new(275_000.0, 20_000.0, 75_000.0);
         let sawtooth = SawtoothModulated::new(385_000.0, 20_000.0);
 
         let samples_drawer = WaveDrawer::new("Multiplexed", DRAW_BUFFER_SIZE, 1);

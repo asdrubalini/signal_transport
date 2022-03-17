@@ -323,7 +323,7 @@ pub mod sawtooth {
         #[inline(always)]
         fn get_sample(&mut self, time: f64) -> Value {
             let m = 0.75;
-            let y = (1.0 + m * self.sawtooth.get_sample(time).y.cos())
+            let y = (1.0 + m * self.sawtooth.get_sample(time).y)
                 * (2.0 * PI * self.carrier_frequency * time).sin();
 
             let sample = Value::new(time, y);
