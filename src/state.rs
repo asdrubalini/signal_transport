@@ -82,8 +82,10 @@ impl State {
 
             if is_paused {
                 while *self.is_paused.read() {
-                    thread::sleep(Duration::from_millis(50));
+                    thread::sleep(Duration::from_millis(10));
                 }
+
+                latest_instant = Instant::now();
             }
 
             // Adjust SAMPLES_PER_CYCLE by the slowdown factor so that when the slowdown factor is large, samples
