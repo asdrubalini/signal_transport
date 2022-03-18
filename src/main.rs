@@ -8,6 +8,7 @@ mod filters;
 mod modulators;
 mod multiplexer;
 mod samples;
+mod simulation_options;
 mod traits;
 
 use app::SignalApp;

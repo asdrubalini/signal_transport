@@ -1,42 +1,33 @@
 use std::{
-    sync::Arc,
-    thread::{self},
+    thread,
     time::{Duration, Instant},
 };
 
 use egui::plot::Value;
-use parking_lot::RwLock;
 
 use crate::{
     consts::{SAMPLES_PER_CYCLE, SAMPLE_PERIOD, SAMPLE_PERIOD_NS},
     demultiplexer::Demultiplexer,
     draw::{ContextDraw, GetSample, PutSample},
     multiplexer::Multiplexer,
+    simulation_options::SimulationOptions,
     traits::Clear,
 };
 
 #[derive(Clone)]
 pub struct Controller {
-    slowdown_factor: Arc<RwLock<f64>>,
-    seconds_elapsed: Arc<RwLock<f64>>,
-    is_paused: Arc<RwLock<bool>>,
+    simulation_options: SimulationOptions,
     multiplexer: Multiplexer,
     demultiplexer: Demultiplexer,
 }
 
 impl Controller {
-    pub fn new(
-        slowdown_factor: Arc<RwLock<f64>>,
-        seconds_elapsed: Arc<RwLock<f64>>,
-        is_paused: Arc<RwLock<bool>>,
-    ) -> Self {
+    pub fn new(simulation_options: SimulationOptions) -> Self {
         let multiplexer = Multiplexer::new();
         let demultiplexer = Demultiplexer::new();
 
         let controller = Controller {
-            slowdown_factor,
-            seconds_elapsed,
-            is_paused,
+            simulation_options,
             multiplexer,
             demultiplexer,
         };
@@ -50,13 +41,14 @@ impl Controller {
     }
 
     fn signal_generation_thread(mut self) {
-        let mut last_known_slowdown_factor = *self.slowdown_factor.read();
+        let mut last_known_slowdown_factor = self.simulation_options.read_slowdown_factor();
 
         let mut t = 0.0;
         let mut latest_instant = Instant::now();
 
         loop {
             let maybe_slowdown_factor = self
+                .simulation_options
                 .slowdown_factor
                 .try_read()
                 .map(|slowdown_factor| *slowdown_factor);
@@ -71,17 +63,18 @@ impl Controller {
                 last_known_slowdown_factor = slowdown_factor;
             };
 
-            if let Some(mut seconds_elapsed) = self.seconds_elapsed.try_write() {
+            if let Some(mut seconds_elapsed) = self.simulation_options.seconds_elapsed.try_write() {
                 *seconds_elapsed = t;
             }
 
             let is_paused = self
+                .simulation_options
                 .is_paused
                 .try_read()
                 .map_or(false, |is_paused| *is_paused);
 
             if is_paused {
-                while *self.is_paused.read() {
+                while self.simulation_options.read_is_paused() {
                     thread::sleep(Duration::from_millis(10));
                 }
 
