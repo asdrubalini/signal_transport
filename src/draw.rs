@@ -9,7 +9,7 @@ use parking_lot::RwLock;
 use spectrum_analyzer::{samples_fft_to_spectrum, windows::hann_window, FrequencyLimit};
 
 use crate::{
-    consts::{FFT_WINDOW_SIZE, SAMPLE_FREQUENCY},
+    consts::{FFT_WINDOW_SIZE, MAX_FREQUENCY, MIN_FREQUENCY, SAMPLE_FREQUENCY},
     samples::Samples,
     traits::Clear,
 };
@@ -139,13 +139,13 @@ impl FrequencyDrawer {
         thread::spawn(move || {
             let mut samples_buffer = Vec::with_capacity(FFT_WINDOW_SIZE as usize);
 
-            // let mut planner = FftPlanner::<f64>::new();
-            // let fft = planner.plan_fft_forward(FFT_WINDOW_SIZE as usize);
-
             loop {
                 while samples_buffer.len() < FFT_WINDOW_SIZE as usize {
                     samples_buffer.push(rx.recv().unwrap());
                 }
+
+                // TODO: rewrite and refactor this
+                // https://crates.io/crates/spectrum-analyzer
 
                 let samples: Vec<f32> = samples_buffer
                     .drain(0..samples_buffer.len())
@@ -159,7 +159,7 @@ impl FrequencyDrawer {
                     // sampling rate
                     SAMPLE_FREQUENCY as u32,
                     // optional frequency limit: e.g. only interested in frequencies 50 <= f <= 150?
-                    FrequencyLimit::Range(35_000.0, 600_000.0),
+                    FrequencyLimit::Range(MIN_FREQUENCY as f32, MAX_FREQUENCY as f32),
                     // optional scale
                     None,
                 )
@@ -172,29 +172,6 @@ impl FrequencyDrawer {
                     let value = Value::new(fr.val() as f64, fr_val.val() as f64);
                     (*frequencies_result).push(value);
                 }
-
-                // let mut samples: Vec<Complex64> = samples_buffer
-                // .drain(0..samples_buffer.len())
-                // .map(|sample| Complex {
-                // re: sample.y,
-                // im: 0.0,
-                // })
-                // .collect();
-
-                // fft.process(&mut samples);
-
-                // let mut frequencies_result = frequencies_result.write();
-                // *frequencies_result = samples
-                // .into_iter()
-                // .enumerate()
-                // .map(|(i, s)| {
-                // Value::new(
-                // // TODO: figure out how this works
-                // (i as u64 * SAMPLE_FREQUENCY / FFT_WINDOW_SIZE / 2) as f64, // compute frequency
-                // s.norm_sqr().sqrt(),
-                // )
-                // })
-                // .collect();
             }
         });
     }
@@ -220,12 +197,14 @@ impl WidgetDraw for FrequencyDrawer {
         };
         let line = Line::new(values).width(2.);
 
+        // TODO: Frequency spectrum must start by 0 (there are no negative magnitudes!)
+
         Plot::new(&self.name)
             .allow_zoom(false)
             .allow_drag(false)
             .height(ui.available_height() / 2.5)
             .view_aspect(2.5)
-            .center_y_axis(true)
+            .center_x_axis(false)
             .show(ui, |plot_ui| plot_ui.line(line));
     }
 }

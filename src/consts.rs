@@ -1,4 +1,6 @@
-pub const SAMPLE_FREQUENCY: u64 = 2_500_000;
+pub const SAMPLE_FREQUENCY: u32 = 2_500_000;
+pub const MIN_FREQUENCY: u32 = 25_000;
+pub const MAX_FREQUENCY: u32 = 650_000;
 pub const SAMPLE_PERIOD: f64 = 1.0 / SAMPLE_FREQUENCY as f64;
 pub const SAMPLE_PERIOD_NS: u64 = (SAMPLE_PERIOD * 1_000_000_000.) as u64;
 pub const SAMPLES_PER_CYCLE: u64 = 2_000;
