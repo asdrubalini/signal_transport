@@ -16,7 +16,7 @@ use crate::{
 };
 
 #[derive(Clone)]
-pub struct State {
+pub struct Controller {
     slowdown_factor: Arc<RwLock<f64>>,
     seconds_elapsed: Arc<RwLock<f64>>,
     is_paused: Arc<RwLock<bool>>,
@@ -24,7 +24,7 @@ pub struct State {
     demultiplexer: Demultiplexer,
 }
 
-impl State {
+impl Controller {
     pub fn new(
         slowdown_factor: Arc<RwLock<f64>>,
         seconds_elapsed: Arc<RwLock<f64>>,
@@ -33,7 +33,7 @@ impl State {
         let multiplexer = Multiplexer::new();
         let demultiplexer = Demultiplexer::new();
 
-        let state = State {
+        let controller = Controller {
             slowdown_factor,
             seconds_elapsed,
             is_paused,
@@ -42,11 +42,11 @@ impl State {
         };
 
         {
-            let state = state.clone();
-            thread::spawn(move || Self::signal_generation_thread(state));
+            let controller = controller.clone();
+            thread::spawn(move || Self::signal_generation_thread(controller));
         }
 
-        state
+        controller
     }
 
     fn signal_generation_thread(mut self) {
@@ -123,21 +123,21 @@ impl State {
     }
 }
 
-impl GetSample for State {
+impl GetSample for Controller {
     #[inline(always)]
     fn get_sample(&mut self, time: f64) -> Value {
         self.multiplexer.get_sample(time)
     }
 }
 
-impl ContextDraw for State {
+impl ContextDraw for Controller {
     fn context_draw(&mut self, ctx: &egui::Context) {
         self.multiplexer.context_draw(ctx);
         self.demultiplexer.context_draw(ctx);
     }
 }
 
-impl Clear for State {
+impl Clear for Controller {
     fn clear(&mut self) {
         self.multiplexer.clear();
         self.demultiplexer.clear();

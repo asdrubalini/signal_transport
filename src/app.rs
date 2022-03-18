@@ -4,11 +4,11 @@ use eframe::epi::{App, Frame};
 use egui::{Context, Layout, Modifiers, Slider, Visuals};
 use parking_lot::RwLock;
 
-use crate::{draw::ContextDraw, state::State};
+use crate::{draw::ContextDraw, controller::Controller};
 
 #[derive(Clone)]
 pub struct SignalApp {
-    state: State,
+    controller: Controller,
     slowdown_factor: Arc<RwLock<f64>>,
     seconds_elapsed: Arc<RwLock<f64>>,
     is_paused: Arc<RwLock<bool>>,
@@ -20,16 +20,16 @@ impl SignalApp {
         let seconds_elapsed = Arc::new(RwLock::from(0.0));
         let is_paused = Arc::new(RwLock::from(false));
 
-        let state = {
+        let controller = {
             let slowdown_factor = Arc::clone(&slowdown_factor);
             let seconds_elapsed = Arc::clone(&seconds_elapsed);
             let is_paused = Arc::clone(&is_paused);
 
-            State::new(slowdown_factor, seconds_elapsed, is_paused)
+            Controller::new(slowdown_factor, seconds_elapsed, is_paused)
         };
 
         let signal_app = SignalApp {
-            state,
+            controller,
             slowdown_factor,
             seconds_elapsed,
             is_paused,
@@ -54,7 +54,7 @@ impl App for SignalApp {
     }
 
     fn update(&mut self, ctx: &Context, _frame: &Frame) {
-        self.state.context_draw(ctx);
+        self.controller.context_draw(ctx);
 
         egui::TopBottomPanel::bottom("speed_factor").show(ctx, |ui| {
             let mut slowdown_factor = self.slowdown_factor.write();

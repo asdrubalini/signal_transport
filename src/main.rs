@@ -1,5 +1,6 @@
 mod app;
 mod consts;
+mod controller;
 mod demodulators;
 mod demultiplexer;
 mod draw;
@@ -7,7 +8,6 @@ mod filters;
 mod modulators;
 mod multiplexer;
 mod samples;
-mod state;
 mod traits;
 
 use app::SignalApp;
