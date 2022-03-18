@@ -58,9 +58,8 @@ impl GetSample for Multiplexer {
         let y = sine.y + square.y + sawtooth.y;
         let sample = Value::new(time, y);
 
-        if self.samples_drawer.sample_insert(sample) {
-            self.frequencies_drawer.sample_insert(sample);
-        }
+        self.samples_drawer.sample_insert(sample);
+        self.frequencies_drawer.sample_insert(sample);
 
         sample
     }

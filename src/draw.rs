@@ -6,10 +6,7 @@ use egui::{
 };
 use flume::{Receiver, Sender};
 use parking_lot::RwLock;
-use rustfft::{
-    num_complex::{Complex, Complex64},
-    FftPlanner,
-};
+use spectrum_analyzer::{samples_fft_to_spectrum, windows::hann_window, FrequencyLimit};
 
 use crate::{
     consts::{FFT_WINDOW_SIZE, SAMPLE_FREQUENCY},
@@ -142,36 +139,62 @@ impl FrequencyDrawer {
         thread::spawn(move || {
             let mut samples_buffer = Vec::with_capacity(FFT_WINDOW_SIZE as usize);
 
-            let mut planner = FftPlanner::<f64>::new();
-            let fft = planner.plan_fft_forward(FFT_WINDOW_SIZE as usize);
+            // let mut planner = FftPlanner::<f64>::new();
+            // let fft = planner.plan_fft_forward(FFT_WINDOW_SIZE as usize);
 
             loop {
                 while samples_buffer.len() < FFT_WINDOW_SIZE as usize {
                     samples_buffer.push(rx.recv().unwrap());
                 }
 
-                let mut samples: Vec<Complex64> = samples_buffer
+                let samples: Vec<f32> = samples_buffer
                     .drain(0..samples_buffer.len())
-                    .map(|sample| Complex {
-                        re: sample.y,
-                        im: 0.0,
-                    })
+                    .map(|value| value.y as f32)
                     .collect();
+                let hann_window = hann_window(&samples);
 
-                fft.process(&mut samples);
+                let spectrum_hann_window = samples_fft_to_spectrum(
+                    // (windowed) samples
+                    &hann_window,
+                    // sampling rate
+                    SAMPLE_FREQUENCY as u32,
+                    // optional frequency limit: e.g. only interested in frequencies 50 <= f <= 150?
+                    FrequencyLimit::Range(35_000.0, 600_000.0),
+                    // optional scale
+                    None,
+                )
+                .unwrap();
 
                 let mut frequencies_result = frequencies_result.write();
-                *frequencies_result = samples
-                    .into_iter()
-                    .enumerate()
-                    .map(|(i, s)| {
-                        Value::new(
-                            // TODO: figure out how this works
-                            (i as u64 * SAMPLE_FREQUENCY / FFT_WINDOW_SIZE / 2) as f64, // compute frequency
-                            s.norm_sqr().sqrt(),
-                        )
-                    })
-                    .collect();
+                (*frequencies_result).clear();
+
+                for (fr, fr_val) in spectrum_hann_window.data().iter() {
+                    let value = Value::new(fr.val() as f64, fr_val.val() as f64);
+                    (*frequencies_result).push(value);
+                }
+
+                // let mut samples: Vec<Complex64> = samples_buffer
+                // .drain(0..samples_buffer.len())
+                // .map(|sample| Complex {
+                // re: sample.y,
+                // im: 0.0,
+                // })
+                // .collect();
+
+                // fft.process(&mut samples);
+
+                // let mut frequencies_result = frequencies_result.write();
+                // *frequencies_result = samples
+                // .into_iter()
+                // .enumerate()
+                // .map(|(i, s)| {
+                // Value::new(
+                // // TODO: figure out how this works
+                // (i as u64 * SAMPLE_FREQUENCY / FFT_WINDOW_SIZE / 2) as f64, // compute frequency
+                // s.norm_sqr().sqrt(),
+                // )
+                // })
+                // .collect();
             }
         });
     }

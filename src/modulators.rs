@@ -228,7 +228,7 @@ pub mod sawtooth {
     use std::f64::consts::PI;
 
     use egui::{plot::Value, Window};
-    use rustfft::num_traits::Pow;
+    use num_traits::Pow;
 
     use crate::{
         consts::{DRAW_BUFFER_SIZE, DRAW_EVERY_N_SAMPLES, FOURIER_SERIES_ITERATIONS_COUNT},
