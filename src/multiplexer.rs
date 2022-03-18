@@ -78,7 +78,7 @@ impl ContextDraw for Multiplexer {
 
         Window::new(&self.frequencies_drawer.name)
             .open(&mut true)
-            .resizable(false)
+            .resizable(true)
             .show(ctx, |ui| self.frequencies_drawer.widget_draw(ui));
     }
 }
