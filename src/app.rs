@@ -1,7 +1,7 @@
 use std::{ops::DerefMut, sync::Arc};
 
 use eframe::epi::{App, Frame};
-use egui::{Context, Layout, Slider, Visuals};
+use egui::{Context, Layout, Modifiers, Slider, Visuals};
 use parking_lot::RwLock;
 
 use crate::{draw::ContextDraw, state::State};
@@ -11,24 +11,28 @@ pub struct SignalApp {
     state: State,
     slowdown_factor: Arc<RwLock<f64>>,
     seconds_elapsed: Arc<RwLock<f64>>,
+    is_paused: Arc<RwLock<bool>>,
 }
 
 impl SignalApp {
     pub fn new() -> Self {
         let slowdown_factor = Arc::new(RwLock::from(1000.0));
         let seconds_elapsed = Arc::new(RwLock::from(0.0));
+        let is_paused = Arc::new(RwLock::from(false));
 
         let state = {
             let slowdown_factor = Arc::clone(&slowdown_factor);
             let seconds_elapsed = Arc::clone(&seconds_elapsed);
+            let is_paused = Arc::clone(&is_paused);
 
-            State::new(slowdown_factor, seconds_elapsed)
+            State::new(slowdown_factor, seconds_elapsed, is_paused)
         };
 
         let signal_app = SignalApp {
             state,
             slowdown_factor,
             seconds_elapsed,
+            is_paused,
         };
 
         signal_app
@@ -67,25 +71,15 @@ impl App for SignalApp {
             });
         });
 
-        // egui::CentralPanel::default().show(&ctx, |ui| {
-        // let ciao = Shape::CubicBezier(CubicBezierShape::from_points_stroke(
-        // [
-        // pos2(0., 0.),
-        // pos2(200., 200.),
-        // pos2(400., 400.),
-        // pos2(320., 320.),
-        // ],
-        // false,
-        // Color32::WHITE,
-        // Stroke::none(),
-        // ));
-
-        // let (_response, painter) = ui.allocate_painter(
-        // Vec2::new(ui.available_width(), ui.available_height()),
-        // Sense::hover(),
-        // );
-        // painter.add(ciao);
-        // });
+        egui::CentralPanel::default().show(&ctx, |_ui| {
+            if ctx
+                .input_mut()
+                .consume_key(Modifiers::default(), egui::Key::Space)
+            {
+                let mut is_paused = self.is_paused.write();
+                *is_paused = !*is_paused;
+            }
+        });
 
         ctx.request_repaint();
     }

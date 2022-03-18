@@ -19,18 +19,24 @@ use crate::{
 pub struct State {
     slowdown_factor: Arc<RwLock<f64>>,
     seconds_elapsed: Arc<RwLock<f64>>,
+    is_paused: Arc<RwLock<bool>>,
     multiplexer: Multiplexer,
     demultiplexer: Demultiplexer,
 }
 
 impl State {
-    pub fn new(slowdown_factor: Arc<RwLock<f64>>, seconds_elapsed: Arc<RwLock<f64>>) -> Self {
+    pub fn new(
+        slowdown_factor: Arc<RwLock<f64>>,
+        seconds_elapsed: Arc<RwLock<f64>>,
+        is_paused: Arc<RwLock<bool>>,
+    ) -> Self {
         let multiplexer = Multiplexer::new();
         let demultiplexer = Demultiplexer::new();
 
         let state = State {
             slowdown_factor,
             seconds_elapsed,
+            is_paused,
             multiplexer,
             demultiplexer,
         };
@@ -67,6 +73,17 @@ impl State {
 
             if let Some(mut seconds_elapsed) = self.seconds_elapsed.try_write() {
                 *seconds_elapsed = t;
+            }
+
+            let is_paused = self
+                .is_paused
+                .try_read()
+                .map_or(false, |is_paused| *is_paused);
+
+            if is_paused {
+                while *self.is_paused.read() {
+                    thread::sleep(Duration::from_millis(50));
+                }
             }
 
             // Adjust SAMPLES_PER_CYCLE by the slowdown factor so that when the slowdown factor is large, samples

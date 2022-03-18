@@ -44,15 +44,15 @@ Esempi comuni di FDM si trovano all'interno della trasmissione televisiva e radi
 trasmesse tutte allo stesso tempo. La selezione del canale, infatti, avviene sintonizzandosi su una specifica frequenza.
 Ciò consente la trasmissione di una grossa quantità di dati simultaneamente, senza sprechi di banda.
 
-\section{I segnali generati}
-La frequenza di campionamento della simulazione è di $2.5 MHz$, che corrisponde ad un periodo di $400 ns$. Secondo il teorema
-del campionamento di Nyquist-Shannon, è sufficiente che la frequenza di campionamento sia il doppio della frequenza massima
-che si intende campionare.\\
+\section{Generazione dei segnali}
+La simulazione avviene con una frequenza di campionamento di $2.5 MHz$, che corrisponde ad un periodo di $400 ns$. Secondo il
+teorema del campionamento di Nyquist-Shannon, è sufficiente che la frequenza di campionamento sia il doppio della frequenza
+massima che si intende campionare.\\
 All'interno della simulazione, si raggiungono frequenze ben inferiori alla metà della frequenza di campionamento, tuttavia
 per essere sicuri del corretto funzionamento, è stata scelta una frequenza superiore. Dato il periodo molto ristretto ($400 ns$),
 non è computazionalmente possibile eseguire l'algoritmo in tempo reale. Oltre alla generazione dei segnali, infatti, ogni
 sample viene sottoposto a vari algoritmi per la visualizzazione, modulazione e demodulazione che verranno approfonditi
-successivamente.
+successivamente.\\
 
 \begin{itemize}
     \item Onda sinusoidale a 20 kHz
@@ -60,6 +60,9 @@ successivamente.
     \item Onda a dente di sega a 20 kHz
     \item Onda quadra contenente un messaggio di testo a 20 kHz
 \end{itemize}
+
+Tutti i segnali sono generati mediante la relativa serie di Fourier con 64 iterazioni, tuttavia questo valore può essere
+modificato dal codice sorgente del simulatore.
 
 \section{Modulazione dei segnali}
 Prima di poter essere trasmessi, i segnali devono essere modulati ad una frequenza superiore. Dato che si sta utilizzando la
