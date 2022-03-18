@@ -17,7 +17,7 @@ pub mod sine {
 
     impl Sine {
         pub fn new(frequency: f64) -> Self {
-            let drawer = WaveDrawer::new("Sine", DRAW_BUFFER_SIZE, DRAW_EVERY_N_SAMPLES);
+            let drawer = WaveDrawer::new("Sine wave", DRAW_BUFFER_SIZE, DRAW_EVERY_N_SAMPLES);
             Sine { drawer, frequency }
         }
     }
@@ -138,7 +138,7 @@ pub mod square {
 
     impl Square {
         pub fn new(frequency: f64) -> Self {
-            let drawer = WaveDrawer::new("Square", DRAW_BUFFER_SIZE, DRAW_EVERY_N_SAMPLES);
+            let drawer = WaveDrawer::new("Square wave", DRAW_BUFFER_SIZE, DRAW_EVERY_N_SAMPLES);
             Square { drawer, frequency }
         }
     }
@@ -259,7 +259,7 @@ pub mod sawtooth {
 
     impl Sawtooth {
         pub fn new(frequency: f64) -> Self {
-            let drawer = WaveDrawer::new("Sawtooth", DRAW_BUFFER_SIZE, DRAW_EVERY_N_SAMPLES);
+            let drawer = WaveDrawer::new("Sawtooth wave", DRAW_BUFFER_SIZE, DRAW_EVERY_N_SAMPLES);
             Sawtooth { drawer, frequency }
         }
     }

@@ -4,7 +4,7 @@ use eframe::epi::{App, Frame};
 use egui::{Context, Layout, Modifiers, Slider, Visuals};
 use parking_lot::RwLock;
 
-use crate::{draw::ContextDraw, controller::Controller};
+use crate::{controller::Controller, draw::ContextDraw};
 
 #[derive(Clone)]
 pub struct SignalApp {
@@ -16,7 +16,7 @@ pub struct SignalApp {
 
 impl SignalApp {
     pub fn new() -> Self {
-        let slowdown_factor = Arc::new(RwLock::from(1000.0));
+        let slowdown_factor = Arc::new(RwLock::from(300.0));
         let seconds_elapsed = Arc::new(RwLock::from(0.0));
         let is_paused = Arc::new(RwLock::from(false));
 
