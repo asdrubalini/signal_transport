@@ -25,6 +25,7 @@ pub enum FilterFrequencies {
     Bandpass200_350,
 }
 
+#[derive(Clone)]
 pub struct Filter {
     h: &'static [f64],
     input: VecDeque<f64>,
@@ -51,8 +52,6 @@ impl Filter {
         let input: Vec<f64> = self.input.iter().map(ToOwned::to_owned).collect();
         let output = convolve(&input, self.h);
 
-        println!("{}", output.len());
-
-        todo!()
+        output[output.len() - (self.h.len() as f64 / 2.0).ceil() as usize]
     }
 }

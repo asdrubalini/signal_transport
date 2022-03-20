@@ -12,7 +12,7 @@ pub struct SimulationOptions {
 impl Default for SimulationOptions {
     fn default() -> Self {
         Self {
-            slowdown_factor: Arc::new(RwLock::from(300.0)),
+            slowdown_factor: Arc::new(RwLock::from(1000.0)),
             seconds_elapsed: Arc::new(RwLock::from(0.0)),
             is_paused: Arc::new(RwLock::from(false)),
         }

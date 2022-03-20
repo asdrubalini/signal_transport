@@ -9,6 +9,7 @@ use crate::{
     consts::{SAMPLES_PER_CYCLE, SAMPLE_PERIOD, SAMPLE_PERIOD_NS},
     demultiplexer::Demultiplexer,
     draw::{ContextDraw, GetSample, PutSample},
+    filters::Filter,
     multiplexer::Multiplexer,
     simulation_options::SimulationOptions,
     traits::Clear,
@@ -45,6 +46,8 @@ impl Controller {
 
         let mut t = 0.0;
         let mut latest_instant = Instant::now();
+
+        let mut filter = Filter::new(crate::filters::FilterFrequencies::Bandpass200_350);
 
         loop {
             let maybe_slowdown_factor = self

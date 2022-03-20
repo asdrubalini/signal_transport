@@ -3,6 +3,7 @@ use egui::{plot::Value, Window};
 use crate::{
     consts::DRAW_BUFFER_SIZE,
     draw::{ContextDraw, FrequencyDrawer, GetSample, WaveDrawer, WidgetDraw},
+    filters::{Filter, FilterFrequencies},
     modulators::{sawtooth::SawtoothModulated, sine::SineModulated, square::SquareModulated},
     traits::Clear,
 };
@@ -14,6 +15,7 @@ pub struct Multiplexer {
     sawtooth_modulator: SawtoothModulated,
     samples_drawer: WaveDrawer,
     frequencies_drawer: FrequencyDrawer,
+    filter: Filter,
 }
 
 impl Multiplexer {
@@ -26,12 +28,15 @@ impl Multiplexer {
         let samples_drawer = WaveDrawer::new("Multiplexed", DRAW_BUFFER_SIZE, 1);
         let frequencies_drawer = FrequencyDrawer::new("Multiplexed frequency spectrum");
 
+        let filter = Filter::new(FilterFrequencies::Bandpass200_350);
+
         let multiplexer = Multiplexer {
             sine_modulator: sine,
             square_modulator: square,
             sawtooth_modulator: sawtooth,
             samples_drawer,
             frequencies_drawer,
+            filter,
         };
 
         multiplexer
