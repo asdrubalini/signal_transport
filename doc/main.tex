@@ -21,10 +21,9 @@ portante diversa in modo da non avere sovrapposizioni di banda. Inoltre, tra un 
 banda di guardia per evitare ulteriormente le interferenze tra un segnale e l'altro.\\
 Ad ogni stadio è inoltre possibile visualizzare interattivamente ed in tempo reale i segnali, in modo da poterne comprendere
 meglio il funzionamento. Viene inoltre mostrato lo spettro del segnale multiplexato, ottenuto applicando un algoritmo di
-Fast Fourier Transform (FFT) \cite{fft} ed è possibile introdurre un segnale di disturbo per osservare gli effetti sui segnali demodulati
-finali.\\
+Fast Fourier Transform (FFT) \cite{fft}.\\
 È infine presente un controllo che permette di rallentare il tempo per osservare meglio la generazione, modulazione e demodulazione
-dei segnali. Per questioni di performance, la simulazione inizia con l'andamento del tempo rallentato di 10 volte.
+dei segnali. Per questioni di performance, la simulazione inizia con l'andamento del tempo rallentato di 1000 volte.
 
 \section{Strumenti utilizzati}
 La simulazione è interamente programmata nel linguaggio di programmazione Rust \cite{rust}, principalmente per le velocità che
@@ -49,10 +48,10 @@ La simulazione avviene con una frequenza di campionamento di $2.5 MHz$, che corr
 teorema del campionamento di Nyquist-Shannon, è sufficiente che la frequenza di campionamento sia il doppio della frequenza
 massima che si intende campionare.\\
 All'interno della simulazione, si raggiungono frequenze ben inferiori alla metà della frequenza di campionamento, tuttavia
-per essere sicuri del corretto funzionamento, è stata scelta una frequenza superiore. Dato il periodo molto ristretto ($400 ns$),
-non è computazionalmente possibile eseguire l'algoritmo in tempo reale. Oltre alla generazione dei segnali, infatti, ogni
-sample viene sottoposto a vari algoritmi per la visualizzazione, modulazione e demodulazione che verranno approfonditi
-successivamente.\\
+per garantire una fluidità per la visualizzazione della simulazione, è stata scelta una frequenza superiore. Dato il periodo
+molto ristretto ($400 ns$), non è computazionalmente possibile eseguire l'algoritmo in tempo reale. Oltre
+alla generazione dei segnali, infatti, ogni sample viene sottoposto a vari algoritmi per la visualizzazione,
+modulazione e demodulazione che verranno approfonditi successivamente.\\
 
 \begin{itemize}
     \item Onda sinusoidale a 20 kHz
@@ -132,7 +131,29 @@ di frequenze, ognuna separata dall'altra da un vuoto più o meno grande, che rap
 
 \section{Separazione di ogni singolo segnale}
 Per poter demodulare ed ottenere i segnali originali, è necessario isolare la banda di frequenze utili attraverso un filtro
-passa-banda opportunamente dimensionato.
+passa-banda opportunamente dimensionato.\\
+Esistono diversi filtri passa-banda che possono essere implementati digitalmente. Uno dei filtri che offre le caratteristiche
+migliori, tra velocità di esecuzione e banda di transizione contenuta è il filtro sinc \cite{sinc}, che sfrutta la funzione
+sinc, la finestra di blackman e l'operazione di convoluzione.\\
+
+\begin{equation}
+    sinc(x) = \frac{sin(x)}{x}
+\end{equation}
+
+Il filtro sinc è un filtro di tipo finite impulse response (FIR), che si differenzia dai filtri di tipo infinite impulse response
+perchè il suo output si stabilizza a zero in un tempo finito. L'algoritmo per applicare un filtro sinc ad un segnale è
+piuttosto semplice, richiede la convoluzione \cite{convolution} tra il segnale ed i coefficienti del filtro desiderato.\\
+I coefficienti non sono altro che un vettore di numeri che rappresentano informazioni come il tipo di filtro, la banda di
+transizione, la frequenza di taglio e la frequenza di campionamento. Il vettore di coefficienti si può ottenere attraverso un
+tool online per il design di filtri come fiiir \cite{fiiir} oppure possono essere calcolati applicando le formule teoriche descritte
+nel capitolo 16 del libro sul DSP di analog.com \cite{dsp-book-ch16}. La lunghezza dei coefficienti dipende dalla cosiddetta kernel
+size. Un'elevata kernel size permette di ottenere un filtro molto preciso ma allo stesso tempo rende i calcoli più lenti.\\
+
+\begin{center}
+    \includegraphics[width=\textwidth]{fiiir.png}
+\end{center}
+Progettazione di un filtro FIR con il tool disponibile su \href{https://fiiir.com}{fiiir.com}\\
+
 
 \section{Demodulazione dei segnali}
 
@@ -173,6 +194,18 @@ intensità per determinare la maggiore, è semplice stabilire quale dei due bit 
 
     \bibitem{rustfft}
     \href{https://docs.rs/rustfft/latest/rustfft/}{RustFFT is a high-performance FFT library written in pure Rust.}
+
+    \bibitem{sinc}
+    \href{https://en.wikipedia.org/wiki/Sinc_filter}{Sinc filter}
+
+    \bibitem{fiiir}
+    \href{https://fiiir.com/}{fiiir.com}
+
+    \bibitem{convolution}
+    \href{https://en.wikipedia.org/wiki/Convolution}{Convolution}
+
+    \bibitem{dsp-book-ch16}
+    \href{https://www.analog.com/media/en/technical-documentation/dsp-book/dsp_book_Ch16.pdf}{Dsp Book - Chapter 16}
 \end{thebibliography}
 
 
