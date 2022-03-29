@@ -170,12 +170,11 @@ la trasformata di Fourier rileva tutte le frequenze dello spettro, nonostante ai
 solo $f_1$ ed $f_2$.\\
 Una tecnica molto più efficiente consiste nell'applicazione dell'algoritmo di Goertzel al segnale, che permette di rilevare
 l'intensità di una singola frequenza. Applicando l'algoritmo due volte, una per $f_1$ e l'altra per $f_2$ e confrontando le due
-intensità per determinare la maggiore, è semplice stabilire quale dei due bit sta essendo trasmesso ad ogni istante.
+potenze, è sufficiente determinare quella maggiore per stabilire il bit.
 
 \subsection{Demodulazione AM}
-
-
-
+Per la demodulazione di un segnale modulato in ampiezza è sufficiente un rivelatore d'inviluppo, implementabile attraverso un semplice
+filtro passa-basso. Il fitro passa-basso utilizzato è di tipo FIR e viene implementato come il passa-banda descritto sopra.
 
 \section{Sviluppi futuri}
 
