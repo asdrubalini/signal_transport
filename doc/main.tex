@@ -2,6 +2,7 @@
 \usepackage{graphicx}
 \usepackage{hyperref}
 \usepackage[utf8]{inputenc}
+\usepackage{siunitx-v2}
 
 \graphicspath{ {./images/} }
 
@@ -44,12 +45,12 @@ trasmesse tutte allo stesso tempo. La selezione del canale, infatti, avviene sin
 Ciò consente la trasmissione di una grossa quantità di dati simultaneamente, senza sprechi di banda.
 
 \section{Generazione dei segnali}
-La simulazione avviene con una frequenza di campionamento di $2.5 MHz$, che corrisponde ad un periodo di $400 ns$. Secondo il
-teorema del campionamento di Nyquist-Shannon, è sufficiente che la frequenza di campionamento sia il doppio della frequenza
-massima che si intende campionare.\\
-All'interno della simulazione, si raggiungono frequenze ben inferiori alla metà della frequenza di campionamento, tuttavia
-per garantire una fluidità per la visualizzazione della simulazione, è stata scelta una frequenza superiore. Dato il periodo
-molto ristretto ($400 ns$), non è computazionalmente possibile eseguire l'algoritmo in tempo reale. Oltre
+La simulazione in tempo reale avviene con una frequenza di campionamento di \SI{2.5}{\MHz}, che corrisponde ad un periodo di
+\SI{400}{\ns}. Secondo il teorema del campionamento di Nyquist-Shannon, per non perdere informazioni è sufficiente che la frequenza
+di campionamento sia più il doppio della frequenza massima che si intende campionare.\\
+All'interno della simulazione si raggiungono frequenze ben inferiori alla metà della frequenza di campionamento, tuttavia
+per garantire una visualizzazione fluida e definita delle onde, è stata scelta una frequenza di campionamento più elevata.
+Dato il periodo molto ristretto (\SI{400}{ns}), non è computazionalmente possibile eseguire l'algoritmo in tempo reale. Oltre
 alla generazione dei segnali, infatti, ogni sample viene sottoposto a vari algoritmi per la visualizzazione,
 modulazione e demodulazione che verranno approfonditi successivamente.\\
 
@@ -60,17 +61,18 @@ modulazione e demodulazione che verranno approfonditi successivamente.\\
     \item Onda quadra contenente un messaggio di testo a 20 kHz
 \end{itemize}
 
-Tutti i segnali sono generati mediante la relativa serie di Fourier con 64 iterazioni, tuttavia questo valore può essere
-modificato dal codice sorgente del simulatore.
+Tutti i segnali (tranne l'onda sinusoidale pura) sono generati mediante la relativa serie di Fourier con 64 iterazioni,
+tuttavia questo valore può essere modificato dal codice sorgente del simulatore.
 
 \section{Modulazione dei segnali}
-Prima di poter essere trasmessi, i segnali devono essere modulati ad una frequenza superiore. Dato che si sta utilizzando la
+Prima di poter essere trasmessi, i segnali devono essere modulati ad una specifica frequenza. Dato che si sta utilizzando la
 tecnica FDM per la trasmissione dei segnali, è molto importante che le modulazioni avvengano ognuna ad una frequenza differente
 dall'altra. È fondamentale calcolare la banda dei segnali modulati e fare in modo che un segnale non si sovrapponga con l'altro.
-Per garantire una maggiore sicurezza viene inoltre considerata una banda di guardia nella quale non è presente alcun segnale.\\
+Per garantire una minore perdita durante la trasmissione, viene inoltre considerata una banda di guardia tra un segnale e
+l'altro nella quale non è presente alcun segnale.\\
 In alcune modulazioni (ad esempio FM), la banda teorica risultante è infinita. Secondo la regola di Carson, la banda utile nella
-quale ricadono il 98\% delle frequenze è comunque limitata, tuttavia per una modulazione migliore è possibile applicare un filtro
-passa banda al segnale prima che esso venga unito agli altri per la trasmissione su un unico mezzo.\\
+quale ricadono il 98\% delle frequenze è comunque limitata. Per una modulazione migliore è possibile applicare un filtro
+passa banda al segnale prima che esso venga sommato con gli altri segnali.
 
 Le modulazioni progettate per i segnali trasmessi sono riportate di seguito:
 
@@ -123,11 +125,12 @@ Le modulazioni progettate per i segnali trasmessi sono riportate di seguito:
 \end{center}
 Lo spettro finale, ottenuto dal calcolo delle bande e lasciando 15 kHz come bande di guardia.
 
-\section{Unione dei segnali con un multiplexer FDM}
+\section{Multiplexing dei segnali in FDM}
 Una volta che i segnali sono stati generati e modulati con delle portanti adeguatamente dimensionate, la trasmissione in FDM
 avviene semplicemente sommando i quattro segnali. È possibile verificare l'efficacia di questa tecnica attraverso il grafico
-dello spettro del segnale. Nel caso di corretta modulazione dei segnali, dovrebbe essere possibile visualizzare quattro gruppi
-di frequenze, ognuna separata dall'altra da un vuoto più o meno grande, che rappresenta le frequenze di guardia.
+dello spettro del segnale, disponibile anche nella simulazione in tempo reale. Nel caso di corretta modulazione dei segnali,
+dovrebbe essere possibile visualizzare quattro gruppi di frequenze, ognuna separata dall'altra da un vuoto più o meno grande,
+che rappresenta le frequenze di guardia.
 
 \section{Separazione di ogni singolo segnale}
 Per poter demodulare ed ottenere i segnali originali, è necessario isolare la banda di frequenze utili attraverso un filtro
@@ -155,7 +158,20 @@ size. Un'elevata kernel size permette di ottenere un filtro molto preciso ma all
 Progettazione di un filtro FIR con il tool disponibile su \href{https://fiiir.com}{fiiir.com}\\
 
 \subsection{Ottimizzazione del filtro sinc ad elevate velocità}
+Il collo di bottiglia in un filtro FIIIR è l'operazione di convoluzione, che ha una un fattore di complessità \cite{big_o} $O(N^2)$,
+il che significa che la complessità computazionale cresce con il quadrato del numero di elementi a cui viene applicata. In un
+contesto real-time, una compessità del genere non è fattibile, per questo motivo viene spesso impiegato un metodo alternativo e
+più efficiente per implementare l'operazione di convoluzione. Si può infatti dimostrare che la convoluzione nel dominio del tempo
+è equivalente ad una semplice moltiplicazione nel dominio della frequenza. Dato che l'algoritmo più efficiente di Fast Fourier
+Transform (per trasformare il segnale nel dominio della frequenza e poi trasformarlo di nuovo nel dominio del tempo, attraverso
+l'Inverse Fast Fourier Transform) ha una complessità di $O(N \cdot log (N))$, su input di elevate dimensioni questa tecnica risulta
+molto più efficiente ed applicabile anche in contesti di data processing real-time.
 
+\begin{center}
+    \includegraphics[width=\textwidth]{big_o.png}
+\end{center}
+Un grafico che mostra il concetto di Big-O notation. Come si può notare, il numero di operazioni aumenta esponenzialmente
+con $O(N^2)$ mentre non ha una crescita così elevata con $O(N \cdot log (N))$.
 
 \section{Demodulazione dei segnali}
 
@@ -207,6 +223,9 @@ filtro passa-basso. Il fitro passa-basso utilizzato è di tipo FIR e viene imple
 
     \bibitem{dsp-book-ch16}
     \href{https://www.analog.com/media/en/technical-documentation/dsp-book/dsp_book_Ch16.pdf}{Dsp Book - Chapter 16}
+
+    \bibitem{big_o}
+    \href{https://en.wikipedia.org/wiki/Big_O_notation}{Big O Notation}
 \end{thebibliography}
 
 
