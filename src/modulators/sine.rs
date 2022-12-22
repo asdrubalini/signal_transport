@@ -1,6 +1,6 @@
 use std::f64::consts::PI;
 
-use egui::{plot::Value, Window};
+use egui::{plot::PlotPoint, Window};
 
 use crate::{
     consts::{DRAW_BUFFER_SIZE, DRAW_EVERY_N_SAMPLES},
@@ -29,9 +29,9 @@ impl Clear for Sine {
 
 impl GetSample for Sine {
     #[inline(always)]
-    fn get_sample(&mut self, time: f64) -> Value {
+    fn get_sample(&mut self, time: f64) -> PlotPoint {
         let y = (2. * PI * self.frequency * time).sin();
-        let sample = Value::new(time, y);
+        let sample = PlotPoint::new(time, y);
         self.drawer.sample_insert(sample);
         sample
     }
@@ -87,13 +87,13 @@ impl Clear for SineModulated {
 
 impl GetSample for SineModulated {
     #[inline(always)]
-    fn get_sample(&mut self, time: f64) -> Value {
+    fn get_sample(&mut self, time: f64) -> PlotPoint {
         let modulating_signal = self.sine.get_sample(time).y;
 
         let y = (2. * PI * self.carrier_frequency * time
             + (self.delta_frequency / self.sine.frequency) * modulating_signal)
             .cos();
-        let sample = Value::new(time, y);
+        let sample = PlotPoint::new(time, y);
         sample
     }
 }

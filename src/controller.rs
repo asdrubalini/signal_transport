@@ -3,7 +3,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use egui::plot::Value;
+use egui::plot::PlotPoint;
 
 use crate::{
     consts::{SAMPLES_PER_CYCLE, SAMPLE_PERIOD, SAMPLE_PERIOD_NS},
@@ -121,7 +121,7 @@ impl Controller {
 
 impl GetSample for Controller {
     #[inline(always)]
-    fn get_sample(&mut self, time: f64) -> Value {
+    fn get_sample(&mut self, time: f64) -> PlotPoint {
         self.multiplexer.get_sample(time)
     }
 }

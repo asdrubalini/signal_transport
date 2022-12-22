@@ -1,4 +1,4 @@
-use egui::plot::Value;
+use egui::plot::PlotPoint;
 
 use crate::{
     demodulators::square::SquareDemodulator,
@@ -20,7 +20,7 @@ impl Demultiplexer {
 }
 
 impl PutSample for Demultiplexer {
-    fn put_sample(&mut self, sample: Value) {
+    fn put_sample(&mut self, sample: PlotPoint) {
         self.square_demodulator.put_sample(sample);
     }
 }

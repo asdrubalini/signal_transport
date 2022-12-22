@@ -1,7 +1,7 @@
 use std::{sync::Arc, thread};
 
 use egui::{
-    plot::{Line, Plot, Value, Values},
+    plot::{Line, Plot, PlotPoint, PlotPoints},
     Context, Ui,
 };
 use flume::{Receiver, Sender};
@@ -24,18 +24,18 @@ pub trait ContextDraw {
 
 pub trait GetSample {
     #[must_use]
-    fn get_sample(&mut self, time: f64) -> Value;
+    fn get_sample(&mut self, time: f64) -> PlotPoint;
 }
 
 pub trait PutSample {
-    fn put_sample(&mut self, sample: Value);
+    fn put_sample(&mut self, sample: PlotPoint);
 }
 
 #[derive(Debug, Clone)]
 pub struct WaveDrawer {
     pub name: String,
     samples_buffer: Arc<RwLock<Samples>>,
-    samples_tx: Sender<Value>,
+    samples_tx: Sender<PlotPoint>,
     draw_counter: u32,
     draw_every_n_samples: u32,
 }
@@ -43,7 +43,7 @@ pub struct WaveDrawer {
 impl WidgetDraw for WaveDrawer {
     fn widget_draw(&mut self, ui: &mut Ui) {
         let values = match self.samples_buffer.try_read() {
-            Some(samples) => Values::from(&*samples),
+            Some(samples) => PlotPoints::from(&*samples),
             None => return,
         };
         let line = Line::new(values).width(2.);
@@ -60,7 +60,7 @@ impl WidgetDraw for WaveDrawer {
 
 impl WaveDrawer {
     pub fn new(name: &str, buffer_size: u32, draw_every_n_samples: u32) -> Self {
-        let (samples_tx, samples_rx) = flume::unbounded::<Value>();
+        let (samples_tx, samples_rx) = flume::unbounded::<PlotPoint>();
 
         let drawer = WaveDrawer {
             name: name.to_string(),
@@ -75,7 +75,7 @@ impl WaveDrawer {
         drawer
     }
 
-    pub fn buffer_sync_thread_start(samples_buffer: Arc<RwLock<Samples>>, rx: Receiver<Value>) {
+    pub fn buffer_sync_thread_start(samples_buffer: Arc<RwLock<Samples>>, rx: Receiver<PlotPoint>) {
         thread::spawn(move || loop {
             while let Ok(sample) = rx.recv() {
                 samples_buffer.write().insert(sample);
@@ -84,7 +84,7 @@ impl WaveDrawer {
     }
 
     #[inline(always)]
-    pub fn sample_insert(&mut self, sample: Value) -> bool {
+    pub fn sample_insert(&mut self, sample: PlotPoint) -> bool {
         // No need to draw each sample
         let mut inserted = false;
 
@@ -108,13 +108,13 @@ impl Clear for WaveDrawer {
 #[derive(Clone)]
 pub struct FrequencyDrawer {
     pub name: String,
-    samples_tx: Sender<Value>,
-    frequencies_result: Arc<RwLock<Vec<Value>>>,
+    samples_tx: Sender<PlotPoint>,
+    frequencies_result: Arc<RwLock<Vec<PlotPoint>>>,
 }
 
 impl FrequencyDrawer {
     pub fn new(name: &str) -> Self {
-        let (samples_tx, samples_rx) = flume::unbounded::<Value>();
+        let (samples_tx, samples_rx) = flume::unbounded::<PlotPoint>();
 
         let frequencies_result = Arc::new(RwLock::new(Vec::new()));
 
@@ -133,8 +133,8 @@ impl FrequencyDrawer {
     }
 
     pub fn buffer_sync_thread_start(
-        rx: Receiver<Value>,
-        frequencies_result: Arc<RwLock<Vec<Value>>>,
+        rx: Receiver<PlotPoint>,
+        frequencies_result: Arc<RwLock<Vec<PlotPoint>>>,
     ) {
         thread::spawn(move || {
             let mut samples_buffer = Vec::with_capacity(FFT_WINDOW_SIZE as usize);
@@ -149,7 +149,7 @@ impl FrequencyDrawer {
 
                 let samples: Vec<f32> = samples_buffer
                     .drain(0..samples_buffer.len())
-                    .map(|value| value.y as f32)
+                    .map(|PlotPoint| PlotPoint.y as f32)
                     .collect();
                 let hann_window = hann_window(&samples);
 
@@ -169,15 +169,15 @@ impl FrequencyDrawer {
                 (*frequencies_result).clear();
 
                 for (fr, fr_val) in spectrum_hann_window.data().iter() {
-                    let value = Value::new(fr.val() as f64, fr_val.val() as f64);
-                    (*frequencies_result).push(value);
+                    let PlotPoint = PlotPoint::new(fr.val() as f64, fr_val.val() as f64);
+                    (*frequencies_result).push(PlotPoint);
                 }
             }
         });
     }
 
     #[inline(always)]
-    pub fn sample_insert(&mut self, sample: Value) -> bool {
+    pub fn sample_insert(&mut self, sample: PlotPoint) -> bool {
         self.samples_tx.send(sample).unwrap();
         true
     }
@@ -192,7 +192,7 @@ impl Clear for FrequencyDrawer {
 impl WidgetDraw for FrequencyDrawer {
     fn widget_draw(&mut self, ui: &mut Ui) {
         let values = match self.frequencies_result.try_read() {
-            Some(samples) => Values::from_values_iter(samples.iter().map(ToOwned::to_owned)),
+            Some(samples) => PlotPoints::from_iter(samples.iter().map(|p| [p.x, p.y])),
             None => return,
         };
         let line = Line::new(values).width(2.);

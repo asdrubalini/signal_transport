@@ -1,4 +1,4 @@
-use egui::{plot::Value, Window};
+use egui::{plot::PlotPoint, Window};
 
 use crate::{
     consts::DRAW_BUFFER_SIZE,
@@ -55,13 +55,13 @@ impl Clear for Multiplexer {
 
 impl GetSample for Multiplexer {
     #[inline(always)]
-    fn get_sample(&mut self, time: f64) -> Value {
+    fn get_sample(&mut self, time: f64) -> PlotPoint {
         let sine = self.sine_modulator.get_sample(time);
         let square = self.square_modulator.get_sample(time);
         let sawtooth = self.sawtooth_modulator.get_sample(time);
 
         let y = sine.y + square.y + sawtooth.y;
-        let sample = Value::new(time, y);
+        let sample = PlotPoint::new(time, y);
 
         self.samples_drawer.sample_insert(sample);
         self.frequencies_drawer.sample_insert(sample);

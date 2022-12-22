@@ -1,13 +1,13 @@
 use std::collections::VecDeque;
 
-use egui::plot::{Value, Values};
+use egui::plot::{PlotPoint, PlotPoints};
 
 use crate::traits::Clear;
 
 #[derive(Debug)]
 pub struct Samples {
     max_samples: u32,
-    inner: VecDeque<Value>,
+    inner: VecDeque<PlotPoint>,
 }
 
 impl Samples {
@@ -18,7 +18,7 @@ impl Samples {
         }
     }
 
-    pub fn insert(&mut self, sample: Value) {
+    pub fn insert(&mut self, sample: PlotPoint) {
         if self.inner.len() as u32 == self.max_samples {
             self.inner.pop_front().unwrap();
         }
@@ -33,8 +33,8 @@ impl Clear for Samples {
     }
 }
 
-impl From<&Samples> for Values {
+impl From<&Samples> for PlotPoints {
     fn from(samples: &Samples) -> Self {
-        Values::from_values_iter(samples.inner.iter().map(ToOwned::to_owned))
+        PlotPoints::from_iter(samples.inner.iter().map(|p| [p.x, p.y]))
     }
 }

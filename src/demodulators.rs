@@ -1,5 +1,5 @@
 pub mod square {
-    use egui::{plot::Value, Window};
+    use egui::{plot::PlotPoint, Window};
 
     use crate::{
         consts::DRAW_BUFFER_SIZE,
@@ -20,7 +20,7 @@ pub mod square {
     }
 
     impl PutSample for SquareDemodulator {
-        fn put_sample(&mut self, _sample: Value) {
+        fn put_sample(&mut self, _sample: PlotPoint) {
             // TODO
         }
     }

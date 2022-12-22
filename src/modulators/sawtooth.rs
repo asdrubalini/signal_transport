@@ -1,6 +1,6 @@
 use std::f64::consts::PI;
 
-use egui::{plot::Value, Window};
+use egui::{plot::PlotPoint, Window};
 use num_traits::Pow;
 
 use crate::{
@@ -45,7 +45,7 @@ impl Clear for Sawtooth {
 
 impl GetSample for Sawtooth {
     #[inline(always)]
-    fn get_sample(&mut self, time: f64) -> Value {
+    fn get_sample(&mut self, time: f64) -> PlotPoint {
         let mut y = 0.0;
 
         // Fourier series for sawtooth wave
@@ -57,7 +57,7 @@ impl GetSample for Sawtooth {
 
         y *= -2.0 / PI;
 
-        let sample = Value::new(time, y);
+        let sample = PlotPoint::new(time, y);
         self.drawer.sample_insert(sample);
         sample
     }
@@ -94,12 +94,12 @@ impl Clear for SawtoothModulated {
 
 impl GetSample for SawtoothModulated {
     #[inline(always)]
-    fn get_sample(&mut self, time: f64) -> Value {
+    fn get_sample(&mut self, time: f64) -> PlotPoint {
         let m = 0.75;
         let y = (1.0 + m * self.sawtooth.get_sample(time).y)
             * (2.0 * PI * self.carrier_frequency * time).sin();
 
-        let sample = Value::new(time, y);
+        let sample = PlotPoint::new(time, y);
         sample
     }
 }

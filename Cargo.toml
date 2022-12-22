@@ -5,8 +5,8 @@ edition = "2021"
 license = "MIT"
 
 [dependencies]
-eframe = "0.17"
-egui = "0.17"
+eframe = "0.20"
+egui = "0.20"
 parking_lot = "0.12"
 flume = "0.10"
 num-traits = "0.2"
